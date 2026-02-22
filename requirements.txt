@@ -1,0 +1,10 @@
+jupyterlab
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+requests
+google-api-python-client
+google-auth
+pytest
