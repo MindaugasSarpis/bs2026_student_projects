@@ -1,1 +1,0 @@
-Laba diena
