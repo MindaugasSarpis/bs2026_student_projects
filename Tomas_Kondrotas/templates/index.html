@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% set active_tab = 'browse' %}
+
+{% block title %}OSRS GE Tracker{% endblock %}
+
+{% block extra_styles %}
+    #search-wrap {
+      flex: 1;
+      max-width: 480px;
+    }
+
+    #search {
+      width: 100%;
+      padding: 8px 14px;
+      font-family: 'RuneScape', serif;
+      font-size: 1rem;
+      background: var(--brown-dark);
+      color: var(--gold-bright);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #search::placeholder { color: var(--text-dim); }
+    #search:focus { border-color: var(--border-bright); }
+
+    #count {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    main {
+      padding: 20px 24px;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .item-card {
+      background: linear-gradient(180deg, #2e1d0e 0%, #1e1208 100%);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 8px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s, transform 0.1s, background 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .item-card:hover {
+      border-color: var(--border-bright);
+      background: linear-gradient(180deg, #3d2810 0%, #261808 100%);
+      transform: translateY(-2px);
+    }
+
+    .item-card img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .item-card .no-img {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .item-card .item-name {
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-align: center;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    #loading, #empty {
+      text-align: center;
+      color: var(--text-dim);
+      margin-top: 60px;
+      font-size: 1.2rem;
+    }
+
+    #empty { display: none; }
+{% endblock %}
+
+{% block header_extra %}
+  <div id="search-wrap">
+    <input id="search" type="search" placeholder="Search items…" autocomplete="off" />
+  </div>
+  <span id="count"></span>
+{% endblock %}
+
+{% block content %}
+<main>
+  <div id="loading">Loading items…</div>
+  <div id="empty">No items found.</div>
+  <div id="grid"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let allItems = [];
+
+  async function loadMapping() {
+    const res = await fetch('/api/mapping');
+    allItems = await res.json();
+    renderGrid(allItems);
+  }
+
+  function renderGrid(items) {
+    const grid = document.getElementById('grid');
+    const loading = document.getElementById('loading');
+    const empty = document.getElementById('empty');
+    const count = document.getElementById('count');
+
+    loading.style.display = 'none';
+
+    if (items.length === 0) {
+      empty.style.display = 'block';
+      grid.innerHTML = '';
+      count.textContent = '';
+      return;
+    }
+
+    empty.style.display = 'none';
+    count.textContent = `${items.length.toLocaleString()} items`;
+
+    // Build all cards at once using a fragment for performance
+    const frag = document.createDocumentFragment();
+    for (const item of items) {
+      const a = document.createElement('a');
+      a.className = 'item-card';
+      a.href = `/item/${item.id}`;
+
+      const imgWrap = document.createElement('div');
+      if (item.icon) {
+        const img = document.createElement('img');
+        img.src = `/images/${encodeURIComponent(item.icon)}`;
+        img.alt = item.name;
+        img.loading = 'lazy';
+        img.onerror = function() {
+          this.replaceWith(fallbackIcon());
+        };
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.appendChild(fallbackIcon());
+      }
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'item-name';
+      nameEl.textContent = item.name;
+
+      a.appendChild(imgWrap);
+      a.appendChild(nameEl);
+      frag.appendChild(a);
+    }
+
+    grid.innerHTML = '';
+    grid.appendChild(frag);
+  }
+
+  function fallbackIcon() {
+    const d = document.createElement('div');
+    d.className = 'no-img';
+    d.textContent = '?';
+    return d;
+  }
+
+  let debounceTimer;
+  document.getElementById('search').addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const q = e.target.value.trim().toLowerCase();
+      const filtered = q
+        ? allItems.filter(i => i.name.toLowerCase().includes(q))
+        : allItems;
+      renderGrid(filtered);
+    }, 150);
+  });
+
+  loadMapping();
+</script>
+{% endblock %}

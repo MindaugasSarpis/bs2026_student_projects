@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% set active_tab = 'alch' %}
+
+{% block title %}High Alch — OSRS GE Tracker{% endblock %}
+
+{% block extra_styles %}
+    main {
+      padding: 20px 24px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    #search-alch {
+      padding: 7px 13px;
+      font-family: 'RuneScape', serif;
+      font-size: 0.95rem;
+      background: var(--brown-dark);
+      color: var(--gold-bright);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      outline: none;
+      width: 260px;
+      transition: border-color 0.2s;
+    }
+
+    #search-alch::placeholder { color: var(--text-dim); }
+    #search-alch:focus { border-color: var(--border-bright); }
+
+    #count-alch {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+
+    #loading-alch {
+      text-align: center;
+      color: var(--text-dim);
+      margin-top: 60px;
+      font-size: 1.2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: var(--brown-mid);
+      color: var(--gold);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 2px solid var(--border-bright);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    thead th:hover { color: var(--gold-bright); }
+
+    thead th.sorted-asc::after  { content: ' ↑'; }
+    thead th.sorted-desc::after { content: ' ↓'; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      cursor: pointer;
+    }
+
+    tbody tr:hover { background: rgba(255,204,68,0.05); }
+
+    td {
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .td-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .td-item img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .td-item .no-img {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .item-name-cell {
+      color: var(--gold);
+    }
+
+    .item-examine-cell {
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .profit  { color: var(--green); }
+    .loss    { color: var(--red); }
+    .neutral { color: var(--text-dim); }
+
+    .members-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #88cc66;
+      margin-right: 4px;
+      flex-shrink: 0;
+    }
+{% endblock %}
+
+{% block header_extra %}{% endblock %}
+
+{% block content %}
+<main>
+  <div class="controls">
+    <input id="search-alch" type="search" placeholder="Filter items…" autocomplete="off" />
+    <span id="count-alch"></span>
+  </div>
+  <div id="loading-alch">Loading prices…</div>
+  <div id="table-wrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th data-col="name">Item</th>
+          <th data-col="buy" class="sorted-desc">Buy price</th>
+          <th data-col="alch">High alch</th>
+          <th data-col="profit">Profit / Loss</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let rows = [];
+  let sortCol = 'profit';
+  let sortDir = -1; // -1 = desc
+
+  function formatGp(val) {
+    if (val == null) return '—';
+    if (val >= 1_000_000) return (val / 1_000_000).toFixed(2) + 'M';
+    if (val >= 1_000) return (val / 1_000).toFixed(1) + 'k';
+    return val.toLocaleString();
+  }
+
+  function profitClass(p) {
+    if (p == null) return 'neutral';
+    if (p > 0) return 'profit';
+    if (p < 0) return 'loss';
+    return 'neutral';
+  }
+
+  function profitStr(p) {
+    if (p == null) return '—';
+    const sign = p > 0 ? '+' : '';
+    return sign + formatGp(p) + ' gp';
+  }
+
+  async function load() {
+    const [mappingRes, latestRes] = await Promise.all([
+      fetch('/api/mapping'),
+      fetch('/api/latest'),
+    ]);
+    const mapping = await mappingRes.json();
+    const latest = (await latestRes.json()).data ?? {};
+
+    rows = [];
+    for (const item of mapping) {
+      if (!item.highalch) continue;
+      const price = latest[item.id];
+      const buy = price?.high ?? null;
+      if (buy == null) continue;
+      const profit = item.highalch - buy;
+      rows.push({ item, buy, alch: item.highalch, profit });
+    }
+
+    document.getElementById('loading-alch').style.display = 'none';
+    document.getElementById('table-wrap').style.display = '';
+
+    render(rows);
+  }
+
+  function render(data) {
+    const sorted = [...data].sort((a, b) => {
+      const av = a[sortCol] ?? -Infinity;
+      const bv = b[sortCol] ?? -Infinity;
+      if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+      return sortDir * (bv - av);
+    });
+
+    document.getElementById('count-alch').textContent = `${sorted.length.toLocaleString()} items`;
+
+    const tbody = document.getElementById('tbody');
+    const frag = document.createDocumentFragment();
+
+    for (const { item, buy, alch, profit } of sorted) {
+      const tr = document.createElement('tr');
+      tr.addEventListener('click', () => { window.location.href = `/item/${item.id}`; });
+
+      const imgHtml = item.icon
+        ? `<img src="/images/${encodeURIComponent(item.icon)}" alt="${item.name}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'no-img',textContent:'?'}))">`
+        : `<div class="no-img">?</div>`;
+
+      const membersDot = item.members ? `<span class="members-dot" title="Members"></span>` : '';
+
+      tr.innerHTML = `
+        <td>
+          <div class="td-item">
+            ${imgHtml}
+            <div>
+              <div class="item-name-cell">${membersDot}${item.name}</div>
+              ${item.examine ? `<div class="item-examine-cell">"${item.examine}"</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td>${buy != null ? formatGp(buy) + ' gp' : '<span class="neutral">—</span>'}</td>
+        <td>${formatGp(alch)} gp</td>
+        <td class="${profitClass(profit)}">${profitStr(profit)}</td>
+      `;
+      frag.appendChild(tr);
+    }
+
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
+  }
+
+  // Sorting
+  document.querySelectorAll('thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir *= -1;
+      } else {
+        sortCol = col;
+        sortDir = col === 'name' ? 1 : -1;
+      }
+      document.querySelectorAll('thead th').forEach(h => {
+        h.classList.remove('sorted-asc', 'sorted-desc');
+      });
+      th.classList.add(sortDir === -1 ? 'sorted-desc' : 'sorted-asc');
+      const q = document.getElementById('search-alch').value.trim().toLowerCase();
+      const filtered = q ? rows.filter(r => r.item.name.toLowerCase().includes(q)) : rows;
+      render(filtered);
+    });
+  });
+
+  // Search
+  let debounce;
+  document.getElementById('search-alch').addEventListener('input', e => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      const q = e.target.value.trim().toLowerCase();
+      const filtered = q ? rows.filter(r => r.item.name.toLowerCase().includes(q)) : rows;
+      render(filtered);
+    }, 150);
+  });
+
+  load();
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}OSRS GE Prices{% endblock %}</title>
+  <style>
+    @font-face {
+      font-family: 'RuneScape';
+      src: url('/fonts/runescape.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --gold: #ff981f;
+      --gold-bright: #ffcc44;
+      --brown-dark: #2b1a0e;
+      --brown-mid: #3d2410;
+      --brown-light: #5c3317;
+      --border: #6b4c2a;
+      --border-bright: #c8982a;
+      --text: #e8d48a;
+      --text-dim: #a08050;
+      --green: #00cc44;
+      --red: #cc2200;
+      --bg: #1a1008;
+    }
+
+    body {
+      font-family: 'RuneScape', serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--brown-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(180deg, #3d2410 0%, #2b1a0e 100%);
+      border-bottom: 2px solid var(--border-bright);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header a.logo {
+      font-size: 1.6rem;
+      color: var(--gold-bright);
+      text-decoration: none;
+      text-shadow: 1px 1px 3px #000, 0 0 8px rgba(255,204,68,0.4);
+      white-space: nowrap;
+      letter-spacing: 1px;
+    }
+
+    header a.logo:hover { color: #fff; }
+
+    /* ── Nav tabs ── */
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      font-family: 'RuneScape', serif;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 6px 14px;
+      border: 1px solid transparent;
+      border-radius: 4px 4px 0 0;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    nav a:hover {
+      color: var(--gold);
+      border-color: var(--border);
+      background: rgba(255,255,255,0.04);
+    }
+
+    nav a.active {
+      color: var(--gold-bright);
+      border-color: var(--border-bright);
+      background: rgba(255,204,68,0.08);
+    }
+
+    {% block extra_styles %}{% endblock %}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="logo" href="/">⚔ GE Tracker</a>
+    <nav>
+      <a href="/" class="{% if active_tab == 'browse' %}active{% endif %}">Browse</a>
+      <a href="/alch" class="{% if active_tab == 'alch' %}active{% endif %}">High Alch</a>
+      <a href="/flips" class="{% if active_tab == 'flips' %}active{% endif %}">Flip Picks</a>
+    </nav>
+    {% block header_extra %}{% endblock %}
+  </header>
+
+  {% block content %}{% endblock %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
