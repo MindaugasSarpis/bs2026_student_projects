@@ -1,0 +1,11 @@
+# Ignoruojame Python virtualią aplinką
+.venv/
+
+# Ignoruojame visus CSV duomenų failus
+*.csv
+
+# Ignoruojame slaptažodžius and stuff
+.env
+
+# Ignoruojame sąskaitų folderį
+Saskaitos_out/

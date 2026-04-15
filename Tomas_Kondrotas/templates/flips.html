@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% set active_tab = 'flips' %}
+
+{% block title %}Flip Picks — OSRS GE Tracker{% endblock %}
+
+{% block extra_styles %}
+    main {
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-intro {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      margin-bottom: 22px;
+      line-height: 1.6;
+      border-left: 3px solid var(--border);
+      padding-left: 12px;
+    }
+
+    .page-intro strong { color: var(--gold); }
+
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    #refresh-btn {
+      font-family: 'RuneScape', serif;
+      font-size: 0.9rem;
+      padding: 7px 18px;
+      background: var(--brown-mid);
+      color: var(--gold);
+      border: 1px solid var(--border-bright);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    #refresh-btn:hover { background: var(--brown-light); color: var(--gold-bright); }
+    #refresh-btn:disabled { color: var(--text-dim); border-color: var(--border); cursor: default; }
+
+    #last-updated {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    #loading-flips {
+      text-align: center;
+      color: var(--text-dim);
+      margin-top: 60px;
+      font-size: 1.2rem;
+    }
+
+    .flip-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .flip-card {
+      background: linear-gradient(180deg, #2e1d0e 0%, #1e1208 100%);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0 18px;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+    }
+
+    .flip-card:hover {
+      border-color: var(--border-bright);
+      transform: translateX(3px);
+    }
+
+    .flip-rank {
+      font-size: 1.6rem;
+      color: var(--border);
+      width: 32px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .flip-card:nth-child(1) .flip-rank { color: #ffd700; }
+    .flip-card:nth-child(2) .flip-rank { color: #c0c0c0; }
+    .flip-card:nth-child(3) .flip-rank { color: #cd7f32; }
+
+    .flip-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .flip-item img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .flip-item .no-img {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .flip-name {
+      font-size: 1.05rem;
+      color: var(--gold-bright);
+    }
+
+    .flip-examine {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .flip-stats {
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      gap: 0 28px;
+      text-align: right;
+    }
+
+    .flip-stat-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 3px;
+    }
+
+    .flip-stat-value {
+      font-size: 0.92rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .flip-stat-value.green  { color: var(--green); }
+    .flip-stat-value.gold   { color: var(--gold); }
+    .flip-stat-value.bright { color: var(--gold-bright); }
+
+    .members-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #88cc66;
+      margin-right: 5px;
+    }
+
+    @media (max-width: 680px) {
+      .flip-card { grid-template-columns: auto 1fr; }
+      .flip-stats { grid-column: 1 / -1; grid-template-columns: repeat(2, 1fr); text-align: left; margin-top: 10px; }
+    }
+{% endblock %}
+
+{% block content %}
+<main>
+  <div class="page-intro">
+    <strong>Buy at</strong> — the lowest price someone recently sold for. That's what you offer when buying.<br>
+    <strong>Sell at</strong> — the highest price someone recently paid. That's what you list it for when selling.<br>
+    <strong>Margin</strong> — the difference between buy and sell. If you buy for 1k and sell for 1.5k, your margin is 500gp (50%).<br>
+    <strong>Max profit</strong> — margin × your buy limit. The most you can make in one full flip cycle before the 4h GE cooldown resets.<br>
+    <strong>1h volume</strong> — how many of this item traded in the last hour. Low volume = you might get stuck waiting for your offer to fill.<br><br>
+    Items are ranked by a score that rewards high margin, high volume, and high max profit together — a great margin on something nobody trades is ranked lower than a decent margin on something that moves thousands per hour.
+    Always verify prices in-game before committing — GE prices move fast.
+  </div>
+
+  <div class="refresh-row">
+    <button id="refresh-btn">↻ Refresh picks</button>
+    <span id="last-updated"></span>
+  </div>
+
+  <div id="loading-flips">Crunching the numbers…</div>
+  <div class="flip-grid" id="flip-grid"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function formatGp(val) {
+    if (val == null) return '—';
+    if (val >= 1_000_000) return (val / 1_000_000).toFixed(2) + 'M gp';
+    if (val >= 1_000)     return (val / 1_000).toFixed(1) + 'k gp';
+    return val.toLocaleString() + ' gp';
+  }
+
+  function formatVol(v) {
+    if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + 'M';
+    if (v >= 1_000)     return (v / 1_000).toFixed(1) + 'k';
+    return v.toLocaleString();
+  }
+
+  async function load() {
+    const loading = document.getElementById('loading-flips');
+    const grid    = document.getElementById('flip-grid');
+    const btn     = document.getElementById('refresh-btn');
+    const updated = document.getElementById('last-updated');
+
+    loading.style.display = 'block';
+    grid.innerHTML = '';
+    btn.disabled = true;
+
+    const res   = await fetch('/api/flips');
+    const items = await res.json();
+
+    loading.style.display = 'none';
+    btn.disabled = false;
+    updated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+
+    const frag = document.createDocumentFragment();
+
+    items.forEach((item, i) => {
+      const a = document.createElement('a');
+      a.className = 'flip-card';
+      a.href = `/item/${item.id}`;
+
+      const imgHtml = item.icon
+        ? `<img src="/images/${encodeURIComponent(item.icon)}" alt="${item.name}" loading="lazy"
+             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'no-img',textContent:'?'}))">`
+        : `<div class="no-img">?</div>`;
+
+      const membersDot = item.members ? `<span class="members-dot" title="Members only"></span>` : '';
+
+      a.innerHTML = `
+        <div class="flip-rank">${i + 1}</div>
+        <div class="flip-item">
+          ${imgHtml}
+          <div>
+            <div class="flip-name">${membersDot}${item.name}</div>
+            ${item.examine ? `<div class="flip-examine">"${item.examine}"</div>` : ''}
+          </div>
+        </div>
+        <div class="flip-stats">
+          <div>
+            <div class="flip-stat-label">Buy at</div>
+            <div class="flip-stat-value">${formatGp(item.buy)}</div>
+          </div>
+          <div>
+            <div class="flip-stat-label">Sell at</div>
+            <div class="flip-stat-value">${formatGp(item.sell)}</div>
+          </div>
+          <div>
+            <div class="flip-stat-label">Margin</div>
+            <div class="flip-stat-value green">+${formatGp(item.margin)} (${item.margin_pct}%)</div>
+          </div>
+          <div>
+            <div class="flip-stat-label">Max profit / limit (${item.limit?.toLocaleString() ?? '?'})</div>
+            <div class="flip-stat-value bright">${formatGp(item.max_profit)}</div>
+          </div>
+          <div>
+            <div class="flip-stat-label">1h volume</div>
+            <div class="flip-stat-value gold">${formatVol(item.volume_1h)}</div>
+          </div>
+        </div>
+      `;
+      frag.appendChild(a);
+    });
+
+    grid.appendChild(frag);
+  }
+
+  document.getElementById('refresh-btn').addEventListener('click', load);
+  load();
+</script>
+{% endblock %}

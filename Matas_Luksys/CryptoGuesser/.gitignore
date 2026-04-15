@@ -1,0 +1,80 @@
+# ── Crypto Data ───────────────────────────────────────────
+data/
+models/
+db/
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+pipeline/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# ── Virtual Environments ──────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ── Environment Variables / Secrets ───────────────────────
+.env
+.env.local
+.env.*.local
+secrets.py
+config/secrets.yaml
+
+# ── Jupyter Notebooks ─────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── TensorFlow / Keras Artifacts ──────────────────────────
+*.keras
+*.h5
+*.pb
+*.tflite
+saved_model/
+tensorboard_logs/
+logs/
+
+# ── Scikit-learn Artifacts ────────────────────────────────
+*.pkl
+*.joblib
+
+# ── OS Files ──────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ── IDEs ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Testing ───────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "refresh:globe-geometry": "node ./scripts/refresh-globe-geometry.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
+    "d3": "^7.9.0"
+  },
+  "devDependencies": {
+    "jsdom": "^29.0.2",
+    "shpjs": "^6.2.0"
+  }
+}

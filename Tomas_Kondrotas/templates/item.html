@@ -1,0 +1,663 @@
+{% extends "base.html" %}
+
+{% block title %}Item Detail — OSRS GE Tracker{% endblock %}
+
+{% block extra_styles %}
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: var(--gold); }
+
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #2e1d0e 0%, #1e1208 100%);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 32px 40px;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .card-header img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .card-header .no-img {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+
+    .item-title {
+      font-size: 1.5rem;
+      color: var(--gold-bright);
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .item-examine {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .meta-item {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px 14px;
+    }
+
+    .meta-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .meta-value {
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .price-section h2 {
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .price-box {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .price-box.buy { border-color: #336633; }
+    .price-box.sell { border-color: #663333; }
+
+    .price-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .price-value {
+      font-size: 1.3rem;
+    }
+
+    .price-box.buy .price-value { color: var(--green); }
+    .price-box.sell .price-value { color: var(--red); }
+
+    .price-time {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .loading-msg {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 20px 0;
+    }
+
+    .error-msg {
+      color: var(--red);
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .high-alch {
+      color: #ff7700;
+    }
+
+    .members-badge {
+      display: inline-block;
+      background: #2a4a1a;
+      border: 1px solid #3a6a2a;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      color: #88cc66;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    .volume-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 12px;
+    }
+
+    .volume-stat {
+      text-align: center;
+    }
+
+    .volume-stat .v-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .volume-stat .v-value {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .chart-section {
+      margin-top: 28px;
+    }
+
+    .chart-section h2 {
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .ctrl-btn {
+      font-family: 'RuneScape', serif;
+      font-size: 0.78rem;
+      padding: 5px 11px;
+      background: var(--brown-dark);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .ctrl-btn:hover {
+      color: var(--gold);
+      border-color: var(--border-bright);
+    }
+
+    .ctrl-btn.active {
+      color: var(--gold-bright);
+      border-color: var(--border-bright);
+      background: rgba(255,204,68,0.1);
+    }
+
+    .ctrl-btn:disabled {
+      color: #3d2e1a;
+      border-color: #3d2e1a;
+      cursor: not-allowed;
+      background: transparent;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+      margin: 0 4px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .chart-loading {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 40px 0;
+      font-size: 0.9rem;
+    }
+{% endblock %}
+
+{% block header_extra %}
+  <a class="back-btn" href="/">← Back to items</a>
+{% endblock %}
+
+{% block content %}
+<main>
+  <div class="card" id="card">
+    <div class="loading-msg">Loading…</div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script>
+  const ITEM_ID = {{ item_id }};
+
+  function formatGp(val) {
+    if (val == null) return '—';
+    if (val >= 1_000_000) return (val / 1_000_000).toFixed(2) + 'M gp';
+    if (val >= 1_000) return (val / 1_000).toFixed(1) + 'k gp';
+    return val.toLocaleString() + ' gp';
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Math.floor(Date.now() / 1000) - ts;
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  async function loadItem() {
+    const card = document.getElementById('card');
+    try {
+      const [mappingRes, priceRes, h1Res, m5Res] = await Promise.all([
+        fetch('/api/mapping'),
+        fetch(`/api/price/${ITEM_ID}`),
+        fetch(`/api/1h/${ITEM_ID}`),
+        fetch(`/api/5m/${ITEM_ID}`),
+      ]);
+
+      const mapping = await mappingRes.json();
+      const priceData = await priceRes.json();
+      const h1Data = await h1Res.json();
+      const m5Data = await m5Res.json();
+
+      const item = mapping.find(i => i.id === ITEM_ID);
+      const price = priceData.data?.[ITEM_ID];
+      const h1 = h1Data.data;
+      const m5 = m5Data.data;
+      const m5ts = m5Data.timestamp;
+
+      if (!item) {
+        card.innerHTML = '<div class="error-msg">Item not found.</div>';
+        return;
+      }
+
+      document.title = `${item.name} — OSRS GE Tracker`;
+
+      const imgHtml = item.icon
+        ? `<img src="/images/${encodeURIComponent(item.icon)}" alt="${item.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'no-img',textContent:'?'}))">`
+        : `<div class="no-img">?</div>`;
+
+      const membersHtml = item.members
+        ? '<span class="members-badge">Members</span>'
+        : '';
+
+      const metaItems = [
+        { label: 'Item ID', value: item.id },
+        { label: 'Value', value: formatGp(item.value) },
+        { label: 'Buy limit', value: item.limit != null ? item.limit.toLocaleString() : '—' },
+        { label: 'High alch', value: item.highalch != null ? `<span class="high-alch">${formatGp(item.highalch)}</span>` : '—' },
+      ];
+
+      const metaHtml = metaItems.map(m => `
+        <div class="meta-item">
+          <div class="meta-label">${m.label}</div>
+          <div class="meta-value">${m.value}</div>
+        </div>
+      `).join('');
+
+      let priceHtml;
+      if (price) {
+        priceHtml = `
+          <div class="price-section">
+            <h2>Latest Prices</h2>
+            <div class="price-grid">
+              <div class="price-box buy">
+                <div class="price-label">High (buy)</div>
+                <div class="price-value">${formatGp(price.high)}</div>
+                <div class="price-time">${timeAgo(price.highTime)}</div>
+              </div>
+              <div class="price-box sell">
+                <div class="price-label">Low (sell)</div>
+                <div class="price-value">${formatGp(price.low)}</div>
+                <div class="price-time">${timeAgo(price.lowTime)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        priceHtml = `<div class="error-msg">No price data available for this item.</div>`;
+      }
+
+      let m5Html = '';
+      if (m5) {
+        const totalVol5 = (m5.highPriceVolume ?? 0) + (m5.lowPriceVolume ?? 0);
+        const periodLabel = m5ts ? `block ending ${timeAgo(m5ts + 300)}` : 'last 5 min';
+        m5Html = `
+          <hr class="divider">
+          <div class="price-section">
+            <h2>5-Minute Average <span style="font-size:0.7rem;color:var(--text-dim)">(${periodLabel})</span></h2>
+            <div class="price-grid">
+              <div class="price-box buy">
+                <div class="price-label">Avg High</div>
+                <div class="price-value">${formatGp(m5.avgHighPrice)}</div>
+                <div class="price-time">${m5.highPriceVolume?.toLocaleString() ?? '—'} traded</div>
+              </div>
+              <div class="price-box sell">
+                <div class="price-label">Avg Low</div>
+                <div class="price-value">${formatGp(m5.avgLowPrice)}</div>
+                <div class="price-time">${m5.lowPriceVolume?.toLocaleString() ?? '—'} traded</div>
+              </div>
+            </div>
+            <div class="volume-row">
+              <div class="volume-stat">
+                <div class="v-label">Total volume (5m)</div>
+                <div class="v-value">${totalVol5.toLocaleString()} items</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      let h1Html = '';
+      if (h1) {
+        const totalVol = (h1.highPriceVolume ?? 0) + (h1.lowPriceVolume ?? 0);
+        h1Html = `
+          <hr class="divider">
+          <div class="price-section">
+            <h2>1-Hour Average</h2>
+            <div class="price-grid">
+              <div class="price-box buy">
+                <div class="price-label">Avg High</div>
+                <div class="price-value">${formatGp(h1.avgHighPrice)}</div>
+                <div class="price-time">${h1.highPriceVolume?.toLocaleString() ?? '—'} traded</div>
+              </div>
+              <div class="price-box sell">
+                <div class="price-label">Avg Low</div>
+                <div class="price-value">${formatGp(h1.avgLowPrice)}</div>
+                <div class="price-time">${h1.lowPriceVolume?.toLocaleString() ?? '—'} traded</div>
+              </div>
+            </div>
+            <div class="volume-row">
+              <div class="volume-stat">
+                <div class="v-label">Total volume (1h)</div>
+                <div class="v-value">${totalVol.toLocaleString()} items</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        <div class="card-header">
+          ${imgHtml}
+          <div>
+            <div class="item-title">${item.name} ${membersHtml}</div>
+            ${item.examine ? `<div class="item-examine">"${item.examine}"</div>` : ''}
+          </div>
+        </div>
+        <div class="meta-grid">${metaHtml}</div>
+        ${priceHtml}
+        ${m5Html}
+        ${h1Html}
+        <hr class="divider">
+        <div class="chart-section">
+          <h2>Price History</h2>
+          <div class="chart-controls">
+            <div class="btn-group" id="timestep-btns">
+              <button class="ctrl-btn" data-ts="5m">5m</button>
+              <button class="ctrl-btn" data-ts="1h">1h</button>
+              <button class="ctrl-btn active" data-ts="6h">6h</button>
+              <button class="ctrl-btn" data-ts="24h">24h</button>
+            </div>
+            <div class="ctrl-sep"></div>
+            <div class="btn-group" id="range-btns">
+              <button class="ctrl-btn" data-range="1">1d</button>
+              <button class="ctrl-btn" data-range="7">7d</button>
+              <button class="ctrl-btn active" data-range="30">30d</button>
+              <button class="ctrl-btn" data-range="90">90d</button>
+              <button class="ctrl-btn" data-range="365">1y</button>
+              <button class="ctrl-btn" data-range="0">All</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-loading" id="chart-loading">Loading chart…</div>
+            <canvas id="priceChart" style="display:none"></canvas>
+          </div>
+        </div>
+      `;
+
+    } catch (err) {
+      card.innerHTML = `<div class="error-msg">Failed to load item data.<br><small>${err.message}</small></div>`;
+    }
+  }
+
+  loadItem().then(() => initChart());
+
+  // ── Chart ────────────────────────────────────────────────────
+  let chartInstance = null;
+  let allPoints = [];
+  let currentTimestep = '6h';
+  let currentRange = 30;
+
+  // Which range buttons are valid for each timestep
+  const VALID_RANGES = {
+    '5m':  [1, 7],
+    '1h':  [1, 7, 30],
+    '6h':  [7, 30, 90, 0],
+    '24h': [30, 90, 365, 0],
+  };
+
+  function syncRangeButtons(timestep) {
+    const valid = VALID_RANGES[timestep];
+    let activeIsValid = false;
+
+    document.getElementById('range-btns').querySelectorAll('.ctrl-btn').forEach(btn => {
+      const r = parseInt(btn.dataset.range);
+      const allowed = valid.includes(r);
+      btn.disabled = !allowed;
+      if (!allowed) btn.classList.remove('active');
+      if (allowed && btn.classList.contains('active')) activeIsValid = true;
+    });
+
+    // If current active range got disabled, snap to the first valid one
+    if (!activeIsValid) {
+      currentRange = valid[0];
+      const firstValid = document.querySelector(`#range-btns .ctrl-btn[data-range="${currentRange}"]`);
+      if (firstValid) {
+        document.getElementById('range-btns').querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+        firstValid.classList.add('active');
+      }
+    }
+  }
+
+  async function initChart() {
+    syncRangeButtons(currentTimestep);
+    await fetchAndRender(currentTimestep, currentRange);
+
+    document.getElementById('timestep-btns').addEventListener('click', async e => {
+      const btn = e.target.closest('.ctrl-btn');
+      if (!btn) return;
+      currentTimestep = btn.dataset.ts;
+      setActive('timestep-btns', btn);
+      syncRangeButtons(currentTimestep);
+      await fetchAndRender(currentTimestep, currentRange);
+    });
+
+    document.getElementById('range-btns').addEventListener('click', async e => {
+      const btn = e.target.closest('.ctrl-btn');
+      if (!btn || btn.disabled) return;
+      currentRange = parseInt(btn.dataset.range);
+      setActive('range-btns', btn);
+      renderChart(allPoints, currentRange);
+    });
+  }
+
+  function setActive(groupId, activeBtn) {
+    document.getElementById(groupId).querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+    activeBtn.classList.add('active');
+  }
+
+  async function fetchAndRender(timestep, range) {
+    const loading = document.getElementById('chart-loading');
+    const canvas = document.getElementById('priceChart');
+    if (loading) loading.style.display = 'block';
+    if (canvas) canvas.style.display = 'none';
+
+    const res = await fetch(`/api/timeseries/${ITEM_ID}/${timestep}`);
+    const json = await res.json();
+    allPoints = json.data ?? [];
+    renderChart(allPoints, range);
+  }
+
+  function renderChart(points, rangeDays) {
+    const loading = document.getElementById('chart-loading');
+    const canvas = document.getElementById('priceChart');
+    if (!canvas) return;
+
+    if (!points.length) {
+      if (loading) { loading.textContent = 'No data available.'; loading.style.display = 'block'; }
+      canvas.style.display = 'none';
+      return;
+    }
+
+    // Filter by range
+    let filtered = points;
+    if (rangeDays > 0) {
+      const cutoff = (Date.now() / 1000) - rangeDays * 86400;
+      filtered = points.filter(p => p.timestamp >= cutoff);
+    }
+
+    if (!filtered.length) filtered = points.slice(-10);
+
+    const labels = filtered.map(p => new Date(p.timestamp * 1000));
+    const highs  = filtered.map(p => p.avgHighPrice);
+    const lows   = filtered.map(p => p.avgLowPrice);
+
+    if (loading) loading.style.display = 'none';
+    canvas.style.display = 'block';
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Avg High',
+            data: highs,
+            borderColor: '#00cc44',
+            backgroundColor: 'rgba(0,204,68,0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          },
+          {
+            label: 'Avg Low',
+            data: lows,
+            borderColor: '#cc2200',
+            backgroundColor: 'rgba(204,34,0,0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#e8d48a',
+              font: { family: 'RuneScape', size: 12 },
+              boxWidth: 14,
+            },
+          },
+          tooltip: {
+            backgroundColor: '#2b1a0e',
+            borderColor: '#6b4c2a',
+            borderWidth: 1,
+            titleColor: '#ffcc44',
+            bodyColor: '#e8d48a',
+            titleFont: { family: 'RuneScape' },
+            bodyFont: { family: 'RuneScape' },
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${formatGp(ctx.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { tooltipFormat: 'MMM d, HH:mm' },
+            ticks: { color: '#a08050', font: { family: 'RuneScape', size: 11 }, maxTicksLimit: 8 },
+            grid: { color: 'rgba(107,76,42,0.3)' },
+          },
+          y: {
+            ticks: {
+              color: '#a08050',
+              font: { family: 'RuneScape', size: 11 },
+              callback: v => formatGp(v),
+            },
+            grid: { color: 'rgba(107,76,42,0.3)' },
+          },
+        },
+      },
+    });
+  }
+</script>
+{% endblock %}
