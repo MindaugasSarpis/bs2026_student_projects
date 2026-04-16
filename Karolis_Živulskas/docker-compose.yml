@@ -1,0 +1,187 @@
+version: "3.9"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Core infrastructure
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       repops
+      POSTGRES_USER:     repops
+      POSTGRES_PASSWORD: repops
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U repops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:8.13.4
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Observability stack
+  # ---------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:2.9.8
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    restart: unless-stopped
+    volumes:
+      - ./logs:/logs:ro
+      - ./infra/promtail/config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:10.4.3
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: repops
+      GF_PATHS_PROVISIONING:      /etc/grafana/provisioning
+      GF_FEATURE_TOGGLES_ENABLE:  publicDashboards
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
+  # ---------------------------------------------------------------------------
+  # Task monitoring
+  # ---------------------------------------------------------------------------
+  flower:
+    image: mher/flower:2.0
+    restart: unless-stopped
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+  # ---------------------------------------------------------------------------
+  # Application
+  # ---------------------------------------------------------------------------
+  api:
+    build: .
+    image: repops:latest
+    restart: unless-stopped
+    command: ["repops-api"]
+    ports:
+      - "8000:8000"
+      - "9091:9091"
+    environment:
+      DATABASE_URL: "postgresql+psycopg://repops:${POSTGRES_PASSWORD:-repops}@postgres:5432/repops"
+      REDIS_URL: "redis://redis:6379/0"
+      ENVIRONMENT: "${ENVIRONMENT:-production}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      S3_EVIDENCE_BUCKET: "${S3_EVIDENCE_BUCKET:-repops-evidence}"
+      AWS_REGION: "${AWS_REGION:-eu-west-1}"
+      LOG_FILE: "/logs/api.log"
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build: .
+    image: repops:latest
+    restart: unless-stopped
+    command: ["repops-worker"]
+    ports:
+      - "9092:9092"
+    environment:
+      DATABASE_URL: "postgresql+psycopg://repops:${POSTGRES_PASSWORD:-repops}@postgres:5432/repops"
+      REDIS_URL: "redis://redis:6379/0"
+      ENVIRONMENT: "${ENVIRONMENT:-production}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      S3_EVIDENCE_BUCKET: "${S3_EVIDENCE_BUCKET:-repops-evidence}"
+      AWS_REGION: "${AWS_REGION:-eu-west-1}"
+      APIFY_TOKEN: "${APIFY_TOKEN:-}"
+      LOG_FILE: "/logs/worker.log"
+      PROMETHEUS_MULTIPROC_DIR: "/tmp/prom_multiproc"
+    volumes:
+      - ./logs:/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:

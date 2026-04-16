@@ -1,0 +1,7 @@
+# Copy to backend.tfvars and fill in your values.
+# The S3 bucket must exist before running terraform init.
+# Create it with: aws s3 mb s3://repops-terraform-state-yourname --region eu-west-1
+
+bucket  = "repops-terraform-state-yourname"   # must exist already, must be globally unique
+key     = "repops/staging/terraform.tfstate"
+region  = "eu-west-1"

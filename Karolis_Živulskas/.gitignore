@@ -1,0 +1,72 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+
+# ---- Testing & coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Environment ----
+.env
+.env.local
+.env.*.local
+
+# ---- Secrets ----
+*.pem
+*.key
+*.p12
+cookies.json
+fb_session.json
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ---- Docker ----
+docker-compose.override.yml
+
+# ---- Alembic ----
+# keep versions/ but not generated __pycache__
+
+# ---- Terraform ----
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfvars
+infra/terraform/backend.tfvars
+
+# ---- Grafana (auto-generated) ----
+infra/grafana/grafana.db
+
+# ---- Evidence / data ----
+data/
+evidence/
+screenshots/
+*.parquet
+*.csv
+
+# ---- Model cache ----
+models/
+.cache/huggingface/
+
+# ---- Logs ----
+logs/*.log
