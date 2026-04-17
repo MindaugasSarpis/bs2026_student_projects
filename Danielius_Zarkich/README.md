@@ -6,9 +6,10 @@ Danielius Žarkich
 
 ## Description
 
-A small **Streamlit** app for sales and logistics: pick a **product** (supplier + port of loading), a **destination (POD)**, and a **planned contract sign date**. The tool shows **transit time (TT)**, **POD offset**, **recommended lead time**, and **shipping / delivery ETAs**. It flags **weekend** delivery dates and **public holidays** in the POD country on the delivery ETA (via **python-holidays**).
+The app has two tabs:
 
-A second tab, **Lane insights**, shows a **world map** and **TT comparison chart** for all origins in `data/TT_Offset.csv` toward the selected POD.
+1. **Order calculator** — Pick a **product** (article, description, supplier, **POL** in the dropdown), a **destination (POD)**, and a **planned contract sign date**. You get **transit time (TT)**, **POD offset**, **recommended lead time**, **shipping ETA** and **delivery ETA**. The app warns if the **delivery ETA** is a **weekend** or a **public holiday** in the POD country (**python-holidays**).
+2. **Lane insights** — Choose a **POD** and see a **world map** (TT by origin country) and a **horizontal TT comparison chart** for all POL rows in `data/TT_Offset.csv` for that POD.
 
 ## Requirements
 
@@ -32,11 +33,10 @@ python -m streamlit run streamlit_app.py
 ## Data
 
 - `data/Products_Suppliers.csv` — articles, suppliers, **POL** (origin country)  
-- `data/TT_Offset.csv` — **TT** and **POD offset** by **POL → POD** pair  
+- `data/TT_Offset.csv` — **TT** and **POD offset** by **POL → POD** pair
 
-Extend `lane_insights.POL_COUNTRY_TO_ISO3` if you add new POL country labels so the map can resolve ISO codes.
+If you add data:
 
-## Limitations
+- New **POL** labels in the CSV → extend `lane_insights.POL_COUNTRY_TO_ISO3` (map).
+- New **POD** labels → extend `holiday_checks.POD_COUNTRY_TO_ISO2` (delivery holiday check) and `lane_insights.POD_LATLON` (map marker).
 
-- ETAs use **calendar-day** arithmetic (not business days).  
-- Holiday checks use **national public holidays** for the POD country, not carrier-specific rules.
