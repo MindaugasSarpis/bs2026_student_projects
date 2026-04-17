@@ -78,5 +78,11 @@ streamlit run app.py
 3. Upload the document, extract obligations, and do data analysis
 
 ---
+
+### Project demo
+[Link to video](https://drive.google.com/file/d/1Mc3VpebAsqfJjUeYfF4SdICG3B3gyxcX/view?usp=sharing)
+
+---
+
 ### Author
 © Rasa Kundrotaite, 2026
