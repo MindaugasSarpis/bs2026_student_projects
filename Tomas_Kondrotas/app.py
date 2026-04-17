@@ -41,6 +41,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/slides")
+def slides():
+    return send_from_directory(".", "slides.html")
+
+
 @app.route("/alch")
 def alch():
     return render_template("alch.html")
