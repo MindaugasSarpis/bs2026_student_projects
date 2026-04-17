@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+import re
 from windrose import WindroseAxes
 
 st.set_page_config(layout="wide")
@@ -33,33 +34,6 @@ plt.rcParams.update({
     "figure.figsize": (3, 3)
 })
 st.title("Wind Farm Design & Energy Analysis Tool")
-
-# ---------------------------------------------------------
-# CONTROLS
-# ---------------------------------------------------------
-
-turbines = {
-    "Vestas V164 8MW": {"rated_power":8000,"cut_in":3,"rated_speed":12,"cut_out":25,"rotor_diameter":164, "hub_height":150},
-    "Vestas V150 6MW": {"rated_power":6000,"cut_in":3,"rated_speed":11.5,"cut_out":25,"rotor_diameter":150, "hub_height":120},
-    "Siemens SG 6.0-154": {"rated_power":6000,"cut_in":3,"rated_speed":12,"cut_out":25,"rotor_diameter":154, "hub_height":150},
-    "Nordex N149 5MW": {"rated_power":5000,"cut_in":3,"rated_speed":11.5,"cut_out":25,"rotor_diameter":149, "hub_height":125},
-    "GE Haliade-X 12MW": {"rated_power":12000,"cut_in":3,"rated_speed":11,"cut_out":25,"rotor_diameter":220, "hub_height":150}
-}
-
-heights = [98,123,148,173,198,218,248]
-
-c1, c2 = st.columns(2)
-
-with c1:
-    turbine_name = st.selectbox("Choose a wind turbine model:", list(turbines.keys()))
-    # store selected turbine in session_state for later tabs
-    st.session_state["selected_turbine"] = turbine_name
-
-with c2:
-    height = st.selectbox("Choose measurement height (m):", heights)
-
-turbine = turbines[turbine_name]
-rotor_diameter = turbine["rotor_diameter"]
 
 # ---------------------------------------------------------
 # LOAD DATA
@@ -96,6 +70,45 @@ df = df.reset_index()
 df_full = df.copy()
 
 # ---------------------------------------------------------
+# EXTRACT HEIGHTS FROM COLUMNS
+# ---------------------------------------------------------
+
+height_cols = [
+    c for c in df.columns
+    if "Horizontal Wind Speed (m/s) at" in c
+]
+
+heights = sorted({
+    int(re.search(r"(\d+)m", c).group(1))
+    for c in height_cols
+})
+
+# ---------------------------------------------------------
+# CONTROLS
+# ---------------------------------------------------------
+
+turbines = {
+    "Vestas V164 8MW": {"rated_power":8000,"cut_in":3,"rated_speed":12,"cut_out":25,"rotor_diameter":164, "hub_height":150},
+    "Vestas V150 6MW": {"rated_power":6000,"cut_in":3,"rated_speed":11.5,"cut_out":25,"rotor_diameter":150, "hub_height":120},
+    "Siemens SG 6.0-154": {"rated_power":6000,"cut_in":3,"rated_speed":12,"cut_out":25,"rotor_diameter":154, "hub_height":150},
+    "Nordex N149 5MW": {"rated_power":5000,"cut_in":3,"rated_speed":11.5,"cut_out":25,"rotor_diameter":149, "hub_height":125},
+    "GE Haliade-X 12MW": {"rated_power":12000,"cut_in":3,"rated_speed":11,"cut_out":25,"rotor_diameter":220, "hub_height":150}
+}
+
+c1, c2 = st.columns(2)
+
+with c1:
+    turbine_name = st.selectbox("Choose a wind turbine model:", list(turbines.keys()))
+    # store selected turbine in session_state for later tabs
+    st.session_state["selected_turbine"] = turbine_name
+
+with c2:
+    height = st.selectbox("Choose measurement height (m):", heights)
+
+turbine = turbines[turbine_name]
+rotor_diameter = turbine["rotor_diameter"]
+
+# ---------------------------------------------------------
 # SELECT HEIGHT
 # ---------------------------------------------------------
 
@@ -104,6 +117,12 @@ direction_column = f"Wind Direction (deg) at {height}m"
 
 df["wind"] = pd.to_numeric(df[wind_column], errors="coerce")
 df["direction"] = pd.to_numeric(df[direction_column], errors="coerce")
+
+# Remove invalid direction values
+df.loc[df["direction"] > 360, "direction"] = np.nan
+df.loc[df["direction"] < 0, "direction"] = np.nan
+df.loc[df["wind"] < 0.5, "direction"] = np.nan
+
 
 df = df.dropna(subset=["wind","direction"])
 
