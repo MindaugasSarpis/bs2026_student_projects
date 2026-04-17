@@ -32,3 +32,6 @@ The most important shift over this project was moving from copying code without 
 ## Tools Used
 
 Python 3.14 | pandas | matplotlib | Jupyter Notebook | VS Code | GitHub
+
+## Project Video
+[Click here to watch the project video](https://drive.google.com/file/d/1ox8JbTbPYpQwTVlNA_XVXGKw85tIepOK/view?usp=sharing)
