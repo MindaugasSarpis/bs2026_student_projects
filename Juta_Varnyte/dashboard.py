@@ -24,6 +24,14 @@ div[data-baseweb="tab-list"] {
 </style>
 """, unsafe_allow_html=True)
 
+plt.rcParams.update({
+    "font.size": 7,
+    "axes.labelsize": 8,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "legend.fontsize": 7,
+    "figure.figsize": (3, 3)
+})
 st.title("Wind Farm Design & Energy Analysis Tool")
 
 # ---------------------------------------------------------
@@ -226,7 +234,7 @@ with tab1:
         ax.plot(df["time"], df["wind"])
 
         ax.set_title(f"Wind Speed at {height} m")
-        ax.set_xlabel("Time")
+        ax.set_xlabel("Time (date)")
         ax.set_ylabel("Wind Speed (m/s)")
 
         st.pyplot(fig)
@@ -265,13 +273,11 @@ with tab2:
     with col2:
         fig, ax = plt.subplots(figsize=(6,3))
 
-        monthly_energy.plot(kind="bar", ax=ax)
+        monthly_energy.plot(kind="barh", ax=ax)
 
         ax.set_title("Monthly Energy Production")
-        ax.set_xlabel("Month")
-        ax.set_ylabel("Energy (MWh)")
-
-        plt.xticks(rotation=45)
+        ax.set_ylabel("Time (date)")
+        ax.set_xlabel("Energy (MWh)")
 
         st.pyplot(fig)
 
@@ -306,7 +312,7 @@ with tab3:
 
         ax.set_title("Wind Speed Distribution")
         ax.set_xlabel("Wind Speed (m/s)")
-        ax.set_ylabel("Probability")
+        ax.set_ylabel("Probability density")
 
         st.pyplot(fig)
 
@@ -325,7 +331,7 @@ def deg_to_compass(deg):
 
 with tab4:
 
-    col1, col2 = st.columns([1,2])
+    col1, col2 = st.columns([1,1])
 
     with col1:
         st.subheader("Wind Direction Analysis")
@@ -370,6 +376,8 @@ with tab4:
             opening=0.8,
             edgecolor='white'
         )
+        ax.tick_params(labelsize=10)
+
         ax.set_rlabel_position(225)
 
         ax.set_title("Wind Rose", fontsize=10)
@@ -415,7 +423,7 @@ with tab5:
         speeds = list(range(0, 30))
         powers = [turbine_power(v, turbine) for v in speeds]
 
-        fig, ax = plt.subplots(figsize=(5,3))
+        fig, ax = plt.subplots(figsize=(5.5,2.5))
         ax.plot(speeds, powers)
 
         ax.set_title("Power Curve")
@@ -440,7 +448,7 @@ with tab6:
     The results show annual energy production and capacity factor for each turbine.
     """)
 
-    col1, col2 = st.columns([1, 1.5])
+    col1, col2 = st.columns([1, 1.25])
 
     results = []
 
@@ -522,16 +530,16 @@ with tab6:
         if not results_df.empty:
             fig, ax = plt.subplots(figsize=(4, 3))
 
-            ax.bar(
+            ax.barh(
                 results_df["Turbine"],
                 results_df["Annual Energy (MWh)"]
             )
 
             ax.set_title("Annual Energy Comparison")
-            ax.set_ylabel("MWh")
+            ax.set_xlabel("MWh")      # horizontal chart → x‑axis is the value
+            ax.set_ylabel("")         # optional: remove y‑axis label
 
-            plt.xticks(rotation=45)
-
+            plt.tight_layout()
             st.pyplot(fig)
 
             st.caption("""
@@ -559,11 +567,10 @@ with tab7:
         - No electrical or mechanical losses included
         """)
 
-        num_turbines = st.slider("Number of turbines", 1, 50, 20)
+        num_turbines = st.slider("Number of turbines", 1, 55, 20)
         spacing_downwind = st.slider("Downwind spacing (D)", 3.0, 12.0, 7.0)
         spacing_crosswind = st.slider("Crosswind spacing (D)", 3.0, 12.0, 5.0)
 
-        # store in session_state for Tab 7
         st.session_state["num_turbines"] = num_turbines
         st.session_state["wake_loss"] = wake_loss_factor(spacing_downwind)
 
@@ -773,7 +780,7 @@ with tab8:
 
     from scipy.stats import norm
 
-    col1, col2 = st.columns([1,2])
+    col1, col2 = st.columns([1,1.25])
 
     with col1:
         st.subheader("Energy Yield Assessment")
@@ -846,7 +853,7 @@ with tab8:
         ax.axvline(energy_p90, linestyle=":", linewidth=2, label="P90")
 
         ax.set_xlabel("Annual Energy Production (MWh)")
-        ax.set_ylabel("Probability Density")
+        ax.set_ylabel("Probability density")
         ax.set_title("Energy Yield Uncertainty")
 
         ax.legend()
