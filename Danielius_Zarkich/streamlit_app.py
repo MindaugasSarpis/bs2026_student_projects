@@ -1,5 +1,5 @@
 """
-Streamlit UI: Sales transit lookup — contract sign date, product, POD, TT, offsets, ETAs.
+Streamlit UI: Order Arrival Calculator — contract sign date, product, POD, TT, offsets, ETAs.
 
 Run: streamlit run streamlit_app.py
 """
@@ -20,17 +20,24 @@ from logistics_data import (
 )
 
 
+def _is_weekend(d: date) -> bool:
+    return d.weekday() >= 5
+
+
 def _product_label(row: pd.Series) -> str:
-    return f"{row['Article_ID']} — {row['Product_Description']}"
+    return (
+        f"{row['Article_ID']} — {row['Product_Description']} — "
+        f"{row['Supplier_Name']} (POL: {row['POL_Country']})"
+    )
 
 
 def main() -> None:
-    st.set_page_config(page_title="Sales transit lookup", layout="centered")
-    st.title("Sales transit lookup")
+    st.set_page_config(page_title="Order Arrival Calculator", layout="centered")
+    st.title("Order Arrival Calculator")
     st.caption(
         "Pick a planned contract sign date, product, and destination (POD). "
-        "ETAs add calendar days to the sign date (weekends not adjusted). "
-        "If the delivery ETA falls on a public holiday in the POD country, a warning is shown."
+        "ETAs add calendar days to the sign date. "
+        "If the delivery ETA is a weekend or a public holiday in the POD country, a notice is shown."
     )
 
     contract_sign = st.date_input(
@@ -89,6 +96,12 @@ def main() -> None:
             help=f"{merged['recommended_lead_days']} calendar days after the planned contract sign date.",
         )
 
+    if _is_weekend(delivery_eta):
+        st.warning(
+            f"Delivery ETA **{delivery_eta.isoformat()}** ({delivery_eta.strftime('%A')}) is a **weekend**. "
+            "Check whether the client's warehouse accepts weekend deliveries."
+        )
+
     delivery_holiday = pod_public_holiday_on_date(merged["pod_country"], delivery_eta)
     if delivery_holiday:
         st.error(
@@ -96,21 +109,6 @@ def main() -> None:
             f"**{merged['pod_country']}**: **{delivery_holiday}**. "
             "Avoid proposing this as the customer delivery date."
         )
-
-    st.divider()
-    st.markdown(
-        f"| | |\n"
-        f"|:---|:---|\n"
-        f"| **Planned contract sign** | {contract_sign.isoformat()} |\n"
-        f"| **Shipping ETA** | {shipping_eta.isoformat()} (+{merged['tt_days']} d) |\n"
-        f"| **Delivery ETA** | {delivery_eta.isoformat()} (+{merged['recommended_lead_days']} d) |\n"
-        f"| **Article** | {merged['article_id']} |\n"
-        f"| **Product** | {merged['product_description']} |\n"
-        f"| **Supplier** | {merged['supplier_name']} |\n"
-        f"| **Material** | {merged['material']} |\n"
-        f"| **POL** | {merged['pol_country']} |\n"
-        f"| **POD** | {merged['pod_country']} |\n"
-    )
 
 
 if __name__ == "__main__":
