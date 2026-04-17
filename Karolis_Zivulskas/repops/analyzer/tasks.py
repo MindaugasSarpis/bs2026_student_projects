@@ -122,14 +122,6 @@ def analyze_post(self: object, facebook_id: str) -> dict:  # type: ignore[type-a
             duration_ms=round(duration * 1000),
         )
 
-    # Auto-report to Meta if above threshold
-    if post.status == PostStatus.FLAGGED and overall_score >= settings.auto_report_threshold:
-        from repops.reporter.tasks import submit_report
-        submit_report.apply_async(
-            kwargs={"post_id": str(post.id)},
-            queue="reporting",
-        )
-
     # Recalculate profile risk score if post has an author
     if post.author_id:
         recalculate_profile_task.apply_async(

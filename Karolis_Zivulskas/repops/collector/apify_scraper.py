@@ -157,8 +157,9 @@ class ApifyScraper:
             if not comment_id:
                 continue
 
-            # Author: prefer profileId, fall back to last path segment of profileUrl
-            author_id: str | None = str(item["profileId"]) if item.get("profileId") else None
+            # Author: prefer profileId, fall back to profileUrl path+query (preserves profile.php?id=xxx)
+            raw_pid = item.get("profileId")
+            author_id: str | None = str(raw_pid) if raw_pid and str(raw_pid) != "profile.php" else None
             if not author_id:
                 profile_url = item.get("profileUrl") or ""
                 seg = profile_url.rstrip("/").split("/")[-1]

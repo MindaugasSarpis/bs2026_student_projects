@@ -8,7 +8,7 @@ from collections.abc import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from repops.api.routers import keywords, results, reports, targets
+from repops.api.routers import admin, keywords, results, targets
 from repops.observability.logging import configure_logging, get_logger
 from repops.observability.metrics import start_metrics_server
 from repops.settings import settings
@@ -42,10 +42,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(admin.router, prefix="/admin", include_in_schema=False)
 app.include_router(targets.router, prefix="/api/v1/targets", tags=["Targets"])
 app.include_router(keywords.router, prefix="/api/v1/keywords", tags=["Keywords"])
 app.include_router(results.router, prefix="/api/v1/results", tags=["Analysis Results"])
-app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 
 
 @app.get("/health", tags=["System"])

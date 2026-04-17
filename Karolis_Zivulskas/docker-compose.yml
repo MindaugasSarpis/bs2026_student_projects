@@ -137,7 +137,6 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       ENVIRONMENT: "${ENVIRONMENT:-production}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-      S3_EVIDENCE_BUCKET: "${S3_EVIDENCE_BUCKET:-repops-evidence}"
       AWS_REGION: "${AWS_REGION:-eu-west-1}"
       LOG_FILE: "/logs/api.log"
     volumes:
@@ -165,7 +164,6 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       ENVIRONMENT: "${ENVIRONMENT:-production}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-      S3_EVIDENCE_BUCKET: "${S3_EVIDENCE_BUCKET:-repops-evidence}"
       AWS_REGION: "${AWS_REGION:-eu-west-1}"
       APIFY_TOKEN: "${APIFY_TOKEN:-}"
       LOG_FILE: "/logs/worker.log"

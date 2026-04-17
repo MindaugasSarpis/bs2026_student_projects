@@ -30,6 +30,7 @@ dependencies = [
     "boto3>=1.34",
 
     # API
+    "jinja2>=3.1",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
