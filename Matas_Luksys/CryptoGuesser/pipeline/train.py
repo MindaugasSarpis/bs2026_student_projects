@@ -98,7 +98,7 @@ def run_training(
     for symbol in symbols:
         try:
             df = load_raw(symbol, model)
-            df = clean(df)
+            df = clean(df, timeframe=MODEL_CONFIGS[model]["timeframe"])
             df = add_features(df)
 
             if fitted_scaler is None:
