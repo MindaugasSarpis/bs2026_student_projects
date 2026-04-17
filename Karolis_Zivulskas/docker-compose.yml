@@ -139,6 +139,8 @@ services:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       AWS_REGION: "${AWS_REGION:-eu-west-1}"
       LOG_FILE: "/logs/api.log"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-repops}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-changeme}"
     volumes:
       - ./logs:/logs
     depends_on:

@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from repops.api.dependencies import get_db
-from repops.models import KeywordEntry, KeywordSet, Target, TargetType
+from repops.models import AnalysisResult, KeywordEntry, KeywordSet, Post, PostStatus, Target, TargetType
 from repops.settings import settings
 from repops.workers.app import app as celery_app
 
@@ -105,6 +105,38 @@ def delete_target(target_id: uuid.UUID, db: DB) -> RedirectResponse:
         db.delete(target)
         db.commit()
     return RedirectResponse("/admin/targets", status_code=303)
+
+
+@router.get("/flagged", response_class=HTMLResponse)
+def flagged_page(request: Request, db: DB) -> HTMLResponse:
+    posts = list(db.scalars(
+        select(Post)
+        .where(Post.status.in_([PostStatus.FLAGGED, PostStatus.CLEARED]))
+        .order_by(Post.created_at.desc())
+        .limit(200)
+    ).all())
+    latest_result: dict[uuid.UUID, AnalysisResult] = {}
+    for post in posts:
+        result = db.scalar(
+            select(AnalysisResult)
+            .where(AnalysisResult.post_id == post.id)
+            .order_by(AnalysisResult.created_at.desc())
+        )
+        if result:
+            latest_result[post.id] = result
+    return templates.TemplateResponse(request, "admin/flagged.html", {
+        "posts": posts,
+        "latest_result": latest_result,
+    })
+
+
+@router.post("/flagged/{post_id}/review")
+def mark_reviewed(post_id: uuid.UUID, db: DB) -> RedirectResponse:
+    post = db.get(Post, post_id)
+    if post and post.status == PostStatus.FLAGGED:
+        post.status = PostStatus.CLEARED
+        db.commit()
+    return RedirectResponse("/admin/flagged", status_code=303)
 
 
 @router.get("/keywords", response_class=HTMLResponse)
