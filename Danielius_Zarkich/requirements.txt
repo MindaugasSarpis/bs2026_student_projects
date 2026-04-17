@@ -1,2 +1,12 @@
 holidays>=0.45
 streamlit>=1.28.0
+pandas>=2.0
+plotly>=5.18
+pycountry>=23.12.11
+jupyter>=1.0.0
+# Plotly inline charts in Jupyter / VS Code notebooks:
+nbformat>=4.2
+ipython>=8.0
+folium>=0.15.0
+seaborn>=0.13.0
+matplotlib>=3.8.0

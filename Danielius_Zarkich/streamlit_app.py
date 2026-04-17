@@ -11,7 +11,6 @@ import streamlit as st
 
 from delivery_scheduler import ROUTES, evaluate_ship_date, suggest_safe_ship_date
 
-
 def main() -> None:
     st.set_page_config(page_title="Smart Holiday Delivery Scheduler", layout="centered")
     st.title("Smart Holiday Delivery Scheduler")

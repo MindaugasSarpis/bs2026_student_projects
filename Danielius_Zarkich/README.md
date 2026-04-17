@@ -61,6 +61,25 @@ python -m streamlit run streamlit_app.py
 
 Then choose a corridor and a ship date in the browser.
 
+### Holiday world comparison (`holiday_world_comparison.ipynb`)
+
+Install dependencies (includes `nbformat` and `ipython` for Plotly inside notebooks), then either open the notebook in VS Code / Cursor or run:
+
+```bash
+python -m jupyter notebook holiday_world_comparison.ipynb
+```
+
+If `jupyter` is not found, use `python -m jupyter` (the `Scripts` folder may not be on your PATH on Windows).
+
+**Plotly in notebooks:** If charts fail with errors about `nbformat` or `ipython`, run `python -m pip install -r requirements.txt` again. The notebook also falls back to opening figures in your **web browser** when inline rendering is not available.
+
+### Story charts (`logistics_story_charts.ipynb` + `holiday_viz.py`)
+
+- **Route health map (Folium):** corridor line segments colored by holiday risk per leg; city pop-ups reference conflicts from the scheduler.
+- **Holiday Gantt (Plotly):** naive vs “smart” truck timelines with gray holiday bands.
+- **Friction heatmap (Seaborn):** year calendar heatmap of a simple multi-country friction score.
+
+Open `logistics_story_charts.ipynb` after installing dependencies.
 
 ## Features
 
