@@ -38,7 +38,6 @@ CryptoGuesser/
 ├── models/
 │   └── m1, m2, m3     — model checkpoints, scalers, config.json (git-ignored)
 ├── cli.py             — command-line entry point
-├── scheduler.py       — automated daily pipeline runner (APScheduler)
 └── requirements.txt
 ```
 
@@ -176,23 +175,6 @@ streamlit run dashboard/app.py
 ```
 
 Opens at `http://localhost:8501`. Provides candlestick charts, pipeline controls, and prediction signals with confidence scores.
-
-***
-
-## Automated Scheduler
-
-To run the pipeline automatically every day at midnight UTC:
-
-```powershell
-python scheduler.py
-```
-
-| Time (UTC) | Job |
-|------------|-----|
-| 00:10 | Append latest candles from Binance |
-| 00:30 | Retrain models on updated data |
-
-The terminal must stay open while the scheduler is running. For persistent background execution, register it via Windows Task Scheduler pointing to `.venv\Scripts\python.exe`.
 
 ***
 
