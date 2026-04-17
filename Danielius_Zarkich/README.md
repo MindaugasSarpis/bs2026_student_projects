@@ -8,8 +8,8 @@ Danielius Žarkich
 
 The app has two tabs:
 
-1. **Order calculator** — Pick a **product** (article, description, supplier, **POL** in the dropdown), a **destination (POD)**, and a **planned contract sign date**. You get **transit time (TT)**, **POD offset**, **recommended lead time**, **shipping ETA** and **delivery ETA**. The app warns if the **delivery ETA** is a **weekend** or a **public holiday** in the POD country (**python-holidays**).
-2. **Lane insights** — Choose a **POD** and see a **world map** (TT by origin country) and a **horizontal TT comparison chart** for all POL rows in `data/TT_Offset.csv` for that POD.
+1. **Order calculator** - Pick a product (article, description, supplier, POL in the dropdown), a destination (POD), and a planned contract sign date. You get transit time (TT), POD offset, recommended lead time, shipping ETA and delivery ETA. The app warns if the delivery ETA is a weekend or a public holiday in the POD country (python-holidays).
+2. **Lane insights** - Choose a POD and see a world map (TT by origin country) and a horizontal TT comparison chart for all POL rows in `data/TT_Offset.csv` for that POD.
 
 ## Requirements
 
@@ -32,8 +32,8 @@ python -m streamlit run streamlit_app.py
 
 ## Data
 
-- `data/Products_Suppliers.csv` — articles, suppliers, **POL** (origin country)  
-- `data/TT_Offset.csv` — **TT** and **POD offset** by **POL → POD** pair
+- `data/Products_Suppliers.csv` - articles, suppliers, **POL** (origin country)  
+- `data/TT_Offset.csv` - **TT** and **POD offset** by **POL → POD** pair
 
 If you add data:
 
