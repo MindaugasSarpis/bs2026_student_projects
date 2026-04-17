@@ -2,7 +2,7 @@ import click
 from datetime import datetime, UTC
 from pipeline.fetch import bootstrap_all, append_all, SYMBOLS, MODEL_CONFIGS
 from pipeline.train import run_training
-from api.predict import get_prediction
+from pipeline.predict import get_prediction
 
 
 @click.group()

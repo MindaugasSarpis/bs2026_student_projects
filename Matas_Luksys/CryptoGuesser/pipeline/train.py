@@ -1,5 +1,7 @@
-import sys, os
-sys.path.insert(0, os.path.dirname(__file__))
+# pipeline/train.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 
 import json
 import numpy as np
@@ -10,18 +12,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import roc_auc_score
 import joblib
-import sqlite3
-from pathlib import Path
 from datetime import datetime
 
 from fetch import load_raw, SYMBOLS, MODEL_CONFIGS
 from clean import clean
 from features import add_features, normalize_features, build_windows, FEATURE_COLS
 
-MODELS_DIR = Path("models")
-DB_PATH    = Path("db/metadata.db")
-DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+MODELS_DIR = Path(__file__).parent.parent / "models"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"[train] Using device: {DEVICE}")
 
@@ -41,12 +39,12 @@ class CryptoLSTM(nn.Module):
     def __init__(self, input_size: int, cfg: dict):
         super().__init__()
 
-        self.lstm1     = nn.LSTM(input_size,    cfg["units_1"], batch_first=True)
-        self.drop1     = nn.Dropout(0.2)
-        self.lstm2     = nn.LSTM(cfg["units_1"], cfg["units_2"], batch_first=True)
-        self.drop2     = nn.Dropout(0.2)
+        self.lstm1      = nn.LSTM(input_size,     cfg["units_1"], batch_first=True)
+        self.drop1      = nn.Dropout(0.2)
+        self.lstm2      = nn.LSTM(cfg["units_1"], cfg["units_2"], batch_first=True)
+        self.drop2      = nn.Dropout(0.2)
 
-        self.attention = nn.MultiheadAttention(
+        self.attention  = nn.MultiheadAttention(
             embed_dim=cfg["units_2"],
             num_heads=cfg["attention_heads"],
             dropout=0.1,
@@ -63,48 +61,17 @@ class CryptoLSTM(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x, _          = self.lstm1(x)
-        x             = self.drop1(x)
-        x, _          = self.lstm2(x)
-        x             = self.drop2(x)
-        attn_out, _   = self.attention(x, x, x)
-        x             = self.layer_norm(x + attn_out)
-        x, (h_n, _)   = self.lstm3(x)
-        x             = self.drop3(h_n[-1])
-        x             = self.relu(self.fc1(x))
-        x             = self.relu(self.fc2(x))
+        x, _        = self.lstm1(x)
+        x           = self.drop1(x)
+        x, _        = self.lstm2(x)
+        x           = self.drop2(x)
+        attn_out, _ = self.attention(x, x, x)
+        x           = self.layer_norm(x + attn_out)
+        x, (h_n, _) = self.lstm3(x)
+        x           = self.drop3(h_n[-1])
+        x           = self.relu(self.fc1(x))
+        x           = self.relu(self.fc2(x))
         return self.out(x).squeeze(1)  # raw logits
-
-
-# ── Database ──────────────────────────────────────────────────────────────────
-
-def _init_db():
-    con = sqlite3.connect(DB_PATH)
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS training_runs (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            run_date        TEXT,
-            model_name      TEXT,
-            model_path      TEXT,
-            val_accuracy    REAL,
-            val_auc         REAL,
-            epochs_trained  INTEGER,
-            symbols         TEXT
-        )
-    """)
-    con.commit()
-    con.close()
-
-
-def _log_run(run_date, model_name, model_path, val_acc, val_auc, epochs, symbols):
-    con = sqlite3.connect(DB_PATH)
-    con.execute("""
-        INSERT INTO training_runs
-        (run_date, model_name, model_path, val_accuracy, val_auc, epochs_trained, symbols)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (run_date, model_name, model_path, val_acc, val_auc, epochs, json.dumps(symbols)))
-    con.commit()
-    con.close()
 
 
 # ── Training ──────────────────────────────────────────────────────────────────
@@ -115,8 +82,6 @@ def run_training(
     window:  int  = None,
     epochs:  int  = 150
 ) -> dict:
-    _init_db()
-
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model '{model}'. Valid: {list(MODEL_CONFIGS.keys())}")
 
@@ -128,16 +93,14 @@ def run_training(
     print(f"Loading and preparing data for [{model.upper()}]...")
 
     all_X, all_y  = [], []
-    fitted_scaler = None  # will be set from first valid symbol
+    fitted_scaler = None
 
     for symbol in symbols:
         try:
             df = load_raw(symbol, model)
-            df = clean(df)
+            df = clean(df, timeframe=MODEL_CONFIGS[model]["timeframe"])
             df = add_features(df)
 
-            # Fit scaler on first symbol, reuse for all subsequent ones
-            # This is the scaler we'll save and use in predict.py
             if fitted_scaler is None:
                 df, fitted_scaler = normalize_features(df)
             else:
@@ -163,17 +126,14 @@ def run_training(
     y = np.concatenate(all_y, axis=0)
     print(f"Total samples: {len(y)} | Class balance: {y.mean():.2%} up")
 
-    # Chronological split — no shuffling
     split   = int(len(X) * 0.8)
     X_train = X[:split];  X_val = X[split:]
     y_train = y[:split];  y_val = y[split:]
 
-    # Class weights
-    classes      = np.unique(y_train)
-    weights      = compute_class_weight("balanced", classes=classes, y=y_train)
+    classes       = np.unique(y_train)
+    weights       = compute_class_weight("balanced", classes=classes, y=y_train)
     class_weights = torch.tensor(weights, dtype=torch.float32).to(DEVICE)
 
-    # DataLoaders
     train_ds = TensorDataset(
         torch.tensor(X_train, dtype=torch.float32),
         torch.tensor(y_train, dtype=torch.float32)
@@ -192,11 +152,11 @@ def run_training(
     scheduler  = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, factor=0.5)
     amp_scaler = torch.amp.GradScaler()
 
-    best_val_loss    = float("inf")
-    best_state       = None
-    patience_counter = 0
-    patience         = 20
-    history          = []
+    best_val_loss     = float("inf")
+    best_state        = None
+    patience_counter  = 0
+    patience          = 20
+    history           = []
     nan_batches_total = 0
 
     print(f"\nTraining [{model.upper()}] — {len(train_ds)} train | {len(val_ds)} val\n")
@@ -251,7 +211,7 @@ def run_training(
             print(f"  [error] All batches NaN at epoch {epoch} — stopping")
             break
 
-        # ── Validate — no autocast, full float32 for stable sigmoid/BCE ──
+        # ── Validate ──
         net.eval()
         val_losses, val_preds, val_true = [], [], []
 
@@ -315,7 +275,6 @@ def run_training(
 
     net.load_state_dict(best_state)
 
-    # Verify weights are clean
     for name, param in net.named_parameters():
         if torch.isnan(param).any():
             raise RuntimeError(f"NaN in weights after training: {name}")
@@ -333,10 +292,8 @@ def run_training(
         "model_name":  model,
     }, model_dir / "model.pt")
 
-    # Save the SAME scaler used during training — critical for predict.py
     joblib.dump(fitted_scaler, model_dir / "scaler.pkl")
 
-    # Save config.json for diagnostics and future reference
     best_epoch_row = max(history, key=lambda h: h["val_auc"])
     config_data = {
         "model":        model,
@@ -355,14 +312,11 @@ def run_training(
     with open(model_dir / "config.json", "w") as f:
         json.dump(config_data, f, indent=2)
 
-    # Update latest pointer
-    (MODELS_DIR / model).mkdir(parents=True, exist_ok=True)
     (MODELS_DIR / model / "latest").write_text(run_date)
 
     best_acc = max(h["val_accuracy"] for h in history)
     best_auc = max(h["val_auc"]      for h in history)
 
-    _log_run(run_date, model, str(model_dir), best_acc, best_auc, len(history), symbols)
     print(f"\nTraining complete — Val Accuracy: {best_acc:.2%} | Val AUC: {best_auc:.3f}")
     print(f"Saved to: {model_dir}")
 
