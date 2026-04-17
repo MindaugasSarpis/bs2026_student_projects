@@ -11,6 +11,7 @@ from datetime import date, timedelta
 import pandas as pd
 import streamlit as st
 
+from holiday_checks import pod_public_holiday_on_date
 from logistics_data import (
     distinct_pod_countries,
     load_products,
@@ -28,7 +29,8 @@ def main() -> None:
     st.title("Sales transit lookup")
     st.caption(
         "Pick a planned contract sign date, product, and destination (POD). "
-        "ETAs add calendar days to the sign date (weekends and holidays not adjusted)."
+        "ETAs add calendar days to the sign date (weekends not adjusted). "
+        "If the delivery ETA falls on a public holiday in the POD country, a warning is shown."
     )
 
     contract_sign = st.date_input(
@@ -77,6 +79,14 @@ def main() -> None:
             "Delivery ETA (contract + TT + offset)",
             delivery_eta.isoformat(),
             help=f"{merged['recommended_lead_days']} calendar days after the planned contract sign date.",
+        )
+
+    delivery_holiday = pod_public_holiday_on_date(merged["pod_country"], delivery_eta)
+    if delivery_holiday:
+        st.error(
+            f"Delivery ETA **{delivery_eta.isoformat()}** falls on a public holiday in "
+            f"**{merged['pod_country']}**: **{delivery_holiday}**. "
+            "Avoid proposing this as the customer delivery date."
         )
 
     st.metric("Transit time (days)", merged["tt_days"])
