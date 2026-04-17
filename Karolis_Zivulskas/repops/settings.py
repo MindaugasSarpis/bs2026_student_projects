@@ -25,12 +25,6 @@ class Settings(BaseSettings):
     # Analysis thresholds
     hate_speech_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
 
-    # Alerting
-    slack_webhook_url: SecretStr | None = None
-    alert_email: str = ""
-    smtp_host: str = "localhost"
-    smtp_port: int = 587
-
     # Observability
     prometheus_port: int = 9091        # API process
     prometheus_worker_port: int = 9092  # worker process

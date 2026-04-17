@@ -1,7 +1,7 @@
 """Celery application factory.
 
 Usage:
-    celery -A repops.workers.app worker -Q collection,analysis,reporting,default
+    celery -A repops.workers.app worker -Q collection,analysis,default
     celery -A repops.workers.app beat
 """
 
