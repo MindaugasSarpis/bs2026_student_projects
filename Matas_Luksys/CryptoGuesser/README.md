@@ -3,7 +3,7 @@
 AI-powered cryptocurrency price direction predictor using a 3-model LSTM ensemble
 trained on Binance market data. Predicts whether a token's next candle will go UP or DOWN.
 
----
+***
 
 ## Architecture
 
@@ -19,14 +19,37 @@ Predictions from all three models are combined into an ensemble signal.
 Only models above the confidence threshold (default 65%) vote.
 If no model is confident enough, the system abstains.
 
----
+***
+
+## Project Structure
+
+```
+CryptoGuesser/
+├── pipeline/
+│   ├── fetch.py       — data ingestion from Binance (bootstrap + daily append)
+│   ├── clean.py       — data cleaning and preprocessing
+│   ├── features.py    — feature engineering
+│   ├── train.py       — LSTM model training
+│   └── predict.py     — inference / ensemble prediction
+├── dashboard/
+│   └── app.py         — Streamlit visual dashboard
+├── data/raw/
+│   └── m1, m2, m3     — parquet files per symbol per model (git-ignored)
+├── models/
+│   └── m1, m2, m3     — model checkpoints, scalers, config.json (git-ignored)
+├── cli.py             — command-line entry point
+├── scheduler.py       — automated daily pipeline runner (APScheduler)
+└── requirements.txt
+```
+
+***
 
 ## Supported Symbols
 
 BTC/USDT, ETH/USDT, BNB/USDT, SOL/USDT, ADA/USDT,
 AVAX/USDT, DOT/USDT, LINK/USDT, XRP/USDT, MATIC/USDT
 
----
+***
 
 ## Requirements
 
@@ -34,7 +57,7 @@ AVAX/USDT, DOT/USDT, LINK/USDT, XRP/USDT, MATIC/USDT
 - NVIDIA GPU with CUDA 12.x (recommended — CPU works but is slow)
 - ~2GB disk space for data + models
 
----
+***
 
 ## First-Time Setup
 
@@ -64,7 +87,6 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 ```powershell
 New-Item -Path "data\raw" -ItemType Directory -Force
 New-Item -Path "models" -ItemType Directory -Force
-New-Item -Path "db" -ItemType Directory -Force
 ```
 
 ### 5. Verify GPU is available (optional but recommended)
@@ -73,14 +95,7 @@ New-Item -Path "db" -ItemType Directory -Force
 python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
 ```
 
-### 6. Suppress TensorFlow-style warnings (optional)
-
-```powershell
-[System.Environment]::SetEnvironmentVariable("TF_ENABLE_ONEDNN_OPTS", "0", "User")
-[System.Environment]::SetEnvironmentVariable("TF_CPP_MIN_LOG_LEVEL", "3", "User")
-```
-
----
+***
 
 ## Daily Usage
 
@@ -99,7 +114,7 @@ python cli.py status
 
 Shows how many candles are stored per model and which model checkpoints exist.
 
----
+***
 
 ## Pipeline Commands
 
@@ -150,4 +165,45 @@ python cli.py predict --symbol ETH/USDT --model m3 # single model
 python cli.py predict --symbol SOL/USDT --threshold 0.70  # stricter confidence
 ```
 
-Example output:
+***
+
+## Dashboard
+
+Launch the Streamlit dashboard for a visual interface to fetch data, train models, and view predictions:
+
+```powershell
+streamlit run dashboard/app.py
+```
+
+Opens at `http://localhost:8501`. Provides candlestick charts, pipeline controls, and prediction signals with confidence scores.
+
+***
+
+## Automated Scheduler
+
+To run the pipeline automatically every day at midnight UTC:
+
+```powershell
+python scheduler.py
+```
+
+| Time (UTC) | Job |
+|------------|-----|
+| 00:10 | Append latest candles from Binance |
+| 00:30 | Retrain models on updated data |
+
+The terminal must stay open while the scheduler is running. For persistent background execution, register it via Windows Task Scheduler pointing to `.venv\Scripts\python.exe`.
+
+***
+
+## Model Artifacts
+
+Each training run saves the following to `models/{m1|m2|m3}/{YYYY-MM-DD}/`:
+
+| File | Contents |
+|------|----------|
+| `model.pt` | PyTorch model weights + architecture config |
+| `scaler.pkl` | Fitted StandardScaler — must match the model it was trained with |
+| `config.json` | Training metadata: val accuracy, AUC, epochs, feature list |
+
+`models/{m}/latest` is a text pointer to the most recent run date, used by `predict.py` to load the correct checkpoint.
