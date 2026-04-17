@@ -19,12 +19,6 @@ app.conf.beat_schedule = {
         "schedule": crontab(minute="*/5"),
         "options": {"queue": "analysis"},
     },
-    # Flush queued reports to Meta every 10 minutes
-    "flush-report-queue": {
-        "task": "repops.reporter.tasks.flush_report_queue",
-        "schedule": crontab(minute="*/10"),
-        "options": {"queue": "reporting"},
-    },
     # Recalculate profile risk scores hourly
     "recalculate-profile-scores": {
         "task": "repops.analyzer.tasks.recalculate_all_profile_scores",

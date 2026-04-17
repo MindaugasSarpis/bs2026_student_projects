@@ -32,7 +32,6 @@ app.config_from_object(
         "task_routes": {
             "repops.collector.tasks.*": {"queue": "collection"},
             "repops.analyzer.tasks.*": {"queue": "analysis"},
-            "repops.reporter.tasks.*": {"queue": "reporting"},
         },
         # Reliability
         "task_acks_late": True,
@@ -44,7 +43,7 @@ app.config_from_object(
 
 # Autodiscover tasks from all sub-packages
 app.autodiscover_tasks(
-    ["repops.collector", "repops.analyzer", "repops.reporter"],
+    ["repops.collector", "repops.analyzer", "repops.workers"],
     force=True,
 )
 
@@ -53,7 +52,7 @@ app.autodiscover_tasks(
 def on_worker_ready(**_kwargs: object) -> None:
     configure_logging()
     start_metrics_server(port=settings.prometheus_worker_port)
-    logger.info("celery_worker_ready", queues=["collection", "analysis", "reporting"])
+    logger.info("celery_worker_ready", queues=["collection", "analysis"])
 
 
 @worker_shutdown.connect
@@ -61,6 +60,9 @@ def on_worker_shutdown(**_kwargs: object) -> None:
     logger.info("celery_worker_shutdown")
 
 
+from repops.workers import schedules as _schedules  # noqa: E402, F401 — registers beat schedule
+
+
 def run() -> None:
     """Entrypoint for `repops-worker` CLI script."""
-    app.worker_main(argv=["worker", "--loglevel=info", "-Q", "collection,analysis,reporting,default"])
+    app.worker_main(argv=["worker", "--loglevel=info", "-Q", "collection,analysis,default"])
