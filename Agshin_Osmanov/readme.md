@@ -1,5 +1,8 @@
 # F1 Winners (1950–2025) — Data Analytics Project
 
+## Video link:
+https://youtu.be/AQWHPgqI3xw?si=83u_fvUHYucY1qmY
+
 ## Overview
 This project is a data analytics project built around a CSV dataset of Formula 1 race winners from 1950 to 2025.  
 The goal is to load the dataset, do simple cleaning, and generate clear summaries + visualizations that show who dominates (drivers/teams) and how races are distributed over time and across continents.
@@ -56,3 +59,4 @@ From inside your project folder:
 ```bash
 pip install -r requirements.txt
 python main.py
+
