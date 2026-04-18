@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 
@@ -7,29 +8,64 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-import plotly.express as px
-import plotly.offline as pyo
 
 
 # ---- PDF FONT SETTINGS ----
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["font.size"] = 12
 
-# ---- HARD CODED THRESHOLDS ----
-THRESHOLDS = {
-    "Temperature": {"low": None, "high": 30.0},
-    "CO2PPM": {"low": None, "high": 1000.0},
-    "PressureHpa": {"low": 980.0, "high": 1035.0},
-    "HumidityPct": {"low": 30.0, "high": 70.0},
-}
+CONFIG_FILENAME = "config.json"
+OUTPUT_DIRNAME = "output"
 
 
-def analyze_thresholds(df, numeric_columns):
+def load_thresholds(config_path):
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+
+    with open(config_path, "r", encoding="utf-8") as config_file:
+        config = json.load(config_file)
+
+    thresholds = config.get("thresholds", config)
+    if not isinstance(thresholds, dict):
+        raise ValueError("Config file must contain a thresholds object.")
+
+    normalized_thresholds = {}
+    for metric, values in thresholds.items():
+        if not isinstance(values, dict):
+            raise ValueError(f"Threshold config for '{metric}' must be an object.")
+
+        low = values.get("low")
+        high = values.get("high")
+
+        if low is not None and not isinstance(low, (int, float)):
+            raise ValueError(f"Low threshold for '{metric}' must be a number or null.")
+
+        if high is not None and not isinstance(high, (int, float)):
+            raise ValueError(f"High threshold for '{metric}' must be a number or null.")
+
+        normalized_thresholds[metric] = {
+            "low": float(low) if low is not None else None,
+            "high": float(high) if high is not None else None,
+        }
+
+    return normalized_thresholds
+
+
+def get_thresholds_for_metric(thresholds, metric):
+    metric_thresholds = thresholds.get(metric, {})
+    return {
+        "low": metric_thresholds.get("low"),
+        "high": metric_thresholds.get("high"),
+    }
+
+
+def analyze_thresholds(df, numeric_columns, thresholds):
     summary = []
 
     for col in numeric_columns:
-        low = THRESHOLDS[col]["low"]
-        high = THRESHOLDS[col]["high"]
+        metric_thresholds = get_thresholds_for_metric(thresholds, col)
+        low = metric_thresholds["low"]
+        high = metric_thresholds["high"]
 
         low_count = len(df[df[col] < low]) if low is not None else 0
         high_count = len(df[df[col] > high]) if high is not None else 0
@@ -191,51 +227,6 @@ def add_stacked_area_chart(pdf, df):
     plt.close(fig)
 
 
-def add_airquality_heatmap(pdf, df):
-    if "CO2PPM" not in df.columns:
-        return
-
-    heatmap_df = df[["Created", "CO2PPM"]].copy()
-
-    start = heatmap_df["Created"].min()
-    heatmap_df["HourIndex"] = (
-        (heatmap_df["Created"] - start).dt.total_seconds() / 3600
-    ).astype(int)
-
-    hourly = heatmap_df.groupby("HourIndex")["CO2PPM"].mean()
-
-    if hourly.empty:
-        return
-
-    data = np.array([hourly.values])
-
-    fig, ax = plt.subplots(figsize=(12, 3))
-    im = ax.imshow(data, aspect="auto", cmap="viridis", interpolation="nearest")
-
-    ax.set_title("Air Quality (CO2) Heatmap - Hourly")
-    ax.set_xlabel("Hours Since Start")
-    ax.set_yticks([])
-
-    total_hours = len(hourly)
-    step = max(1, total_hours // 10)
-    ticks = list(range(0, total_hours, step))
-    if ticks and ticks[-1] != total_hours - 1:
-        ticks.append(total_hours - 1)
-    elif not ticks:
-        ticks = [0]
-
-    ax.set_xticks(ticks)
-    ax.set_xticklabels([str(t) for t in ticks])
-
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label("CO2 (PPM)")
-
-    note = "Each column represents the average CO2 value for one hour since the first reading."
-    fig.text(0.01, 0.01, note, fontsize=10)
-
-    pdf.savefig(fig, bbox_inches="tight")
-    plt.close(fig)
-
 
 def add_threshold_zones(ax, low, high):
     ymin, ymax = ax.get_ylim()
@@ -252,146 +243,23 @@ def add_threshold_zones(ax, low, high):
         ax.axhspan(high, ymax, alpha=0.12, color="red")
 
 
-def add_3d_scatter_pdf(pdf, df):
-    required = ["Temperature", "HumidityPct", "CO2PPM"]
-    if not all(col in df.columns for col in required):
-        return
 
-    plot_df = df[required + ["Created"]].copy()
-
-    max_points = 3000
-    if len(plot_df) > max_points:
-        plot_df = plot_df.iloc[::max(1, len(plot_df) // max_points)].copy()
-
-    plot_df["TimeHours"] = (
-        (plot_df["Created"] - plot_df["Created"].min()).dt.total_seconds() / 3600.0
-    )
-
-    fig = plt.figure(figsize=(11, 8))
-    ax = fig.add_subplot(111, projection="3d")
-
-    scatter = ax.scatter(
-        plot_df["Temperature"],
-        plot_df["HumidityPct"],
-        plot_df["CO2PPM"],
-        c=plot_df["TimeHours"],
-        cmap="viridis",
-        s=18,
-        alpha=0.8,
-    )
-
-    ax.set_title("3D Scatter: Temperature vs Humidity vs CO2")
-    ax.set_xlabel("Temperature")
-    ax.set_ylabel("Humidity (%)")
-    ax.set_zlabel("CO2 (PPM)")
-
-    cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
-    cbar.set_label("Hours Since Start")
-
-    pdf.savefig(fig, bbox_inches="tight")
-    plt.close(fig)
-
-
-def generate_html_dashboard(df, output_html):
-    sections = []
-
-    if all(col in df.columns for col in ["Temperature", "CO2PPM", "HumidityPct"]):
-        fig_multi = px.line(
-            df,
-            x="Created",
-            y=["Temperature", "CO2PPM", "HumidityPct"],
-            title="Temperature, CO2, and Humidity Over Time",
-        )
-        sections.append(pyo.plot(fig_multi, include_plotlyjs="cdn", output_type="div"))
-
-    if "CO2PPM" in df.columns:
-        heatmap_df = df[["Created", "CO2PPM"]].copy()
-        start = heatmap_df["Created"].min()
-        heatmap_df["HourIndex"] = (
-            (heatmap_df["Created"] - start).dt.total_seconds() / 3600
-        ).astype(int)
-        hourly = heatmap_df.groupby("HourIndex")["CO2PPM"].mean().reset_index()
-
-        if not hourly.empty:
-            heat_data = np.array([hourly["CO2PPM"].values])
-            fig_heat = px.imshow(
-                heat_data,
-                aspect="auto",
-                labels={"x": "Hours Since Start", "color": "CO2 (PPM)"},
-                title="Air Quality Heatmap - Hourly",
-            )
-            fig_heat.update_yaxes(showticklabels=False)
-            sections.append(pyo.plot(fig_heat, include_plotlyjs=False, output_type="div"))
-
-    if all(col in df.columns for col in ["Temperature", "HumidityPct", "CO2PPM"]):
-        plot_df = df[["Created", "Temperature", "HumidityPct", "CO2PPM"]].copy()
-        plot_df["HoursSinceStart"] = (
-            (plot_df["Created"] - plot_df["Created"].min()).dt.total_seconds() / 3600.0
-        )
-
-        max_points = 5000
-        if len(plot_df) > max_points:
-            plot_df = plot_df.iloc[::max(1, len(plot_df) // max_points)].copy()
-
-        fig_3d = px.scatter_3d(
-            plot_df,
-            x="Temperature",
-            y="HumidityPct",
-            z="CO2PPM",
-            color="HoursSinceStart",
-            title="3D Scatter: Temperature vs Humidity vs CO2",
-            labels={
-                "Temperature": "Temperature",
-                "HumidityPct": "Humidity (%)",
-                "CO2PPM": "CO2 (PPM)",
-                "HoursSinceStart": "Hours Since Start",
-            },
-        )
-        sections.append(pyo.plot(fig_3d, include_plotlyjs=False, output_type="div"))
-
-    html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Air Quality Dashboard</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f8f9fb;
-        }}
-        h1 {{
-            margin-bottom: 10px;
-        }}
-        .chart {{
-            background: white;
-            padding: 16px;
-            margin-bottom: 24px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }}
-    </style>
-</head>
-<body>
-    <h1>Air Quality Dashboard</h1>
-    <p>Generated from sensor data.</p>
-    {''.join(f'<div class="chart">{section}</div>' for section in sections)}
-</body>
-</html>
-"""
-
-    with open(output_html, "w", encoding="utf-8") as f:
-        f.write(html)
-
-
-def analyze_air_quality(csv_file, output_base):
+def analyze_air_quality(csv_file, output_file_name, config_path=None):
     if not os.path.exists(csv_file):
         print(f"Error: File '{csv_file}' not found.")
         sys.exit(1)
 
-    output_pdf = f"{output_base}.pdf"
-    output_html = f"{output_base}.html"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    if config_path is None:
+        config_path = os.path.join(script_dir, CONFIG_FILENAME)
+
+    thresholds = load_thresholds(config_path)
+
+    output_dir = os.path.join(script_dir, OUTPUT_DIRNAME)
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_pdf = os.path.join(output_dir, f"{output_file_name}.pdf")
 
     df = pd.read_csv(csv_file)
 
@@ -425,14 +293,11 @@ def analyze_air_quality(csv_file, output_base):
         for col in numeric_columns
     ])
 
-    alert_summary_df = analyze_thresholds(df, numeric_columns)
+    alert_summary_df = analyze_thresholds(df, numeric_columns, thresholds)
 
     with PdfPages(output_pdf) as pdf:
         add_cover_tables_page(pdf, df, summary_df, alert_summary_df)
-        add_clean_multiline_timeseries(pdf, df)
-        add_stacked_area_chart(pdf, df)
-        add_airquality_heatmap(pdf, df)
-        add_3d_scatter_pdf(pdf, df)
+  
 
         for col in numeric_columns:
             fig, ax = plt.subplots(figsize=(11, 6))
@@ -444,8 +309,9 @@ def analyze_air_quality(csv_file, output_base):
             ax.grid(True, alpha=0.3)
             fig.autofmt_xdate()
 
-            low = THRESHOLDS[col]["low"]
-            high = THRESHOLDS[col]["high"]
+            metric_thresholds = get_thresholds_for_metric(thresholds, col)
+            low = metric_thresholds["low"]
+            high = metric_thresholds["high"]
 
             y_min = df[col].min()
             y_max = df[col].max()
@@ -475,20 +341,24 @@ def analyze_air_quality(csv_file, output_base):
             ax.legend()
             pdf.savefig(fig, bbox_inches="tight")
             plt.close(fig)
-
-    generate_html_dashboard(df, output_html)
-
+            
+        add_clean_multiline_timeseries(pdf, df)
+        add_stacked_area_chart(pdf, df)
     print(f"PDF saved: {output_pdf}")
-    print(f"HTML saved: {output_html}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Air quality CSV analyzer")
     parser.add_argument("input_csv", help="Path to input CSV file")
-    parser.add_argument("output_name", help="Output base name without extension")
+    parser.add_argument("output_file_name", help="Output file name without extension")
+    parser.add_argument(
+        "--config",
+        default=None,
+        help="Path to threshold config JSON file. Defaults to config.json next to this script.",
+    )
 
     args = parser.parse_args()
-    analyze_air_quality(args.input_csv, args.output_name)
+    analyze_air_quality(args.input_csv, args.output_file_name, args.config)
 
 # -- RUN AUTOMATICALLY
 if __name__ == "__main__":

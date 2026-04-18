@@ -1,0 +1,20 @@
+{
+  "thresholds": {
+    "Temperature": {
+      "low": null,
+      "high": 30.0
+    },
+    "CO2PPM": {
+      "low": null,
+      "high": 1000.0
+    },
+    "PressureHpa": {
+      "low": 980.0,
+      "high": 1035.0
+    },
+    "HumidityPct": {
+      "low": 30.0,
+      "high": 70.0
+    }
+  }
+}
