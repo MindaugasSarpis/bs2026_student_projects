@@ -1,0 +1,4 @@
+holidays>=0.45
+streamlit>=1.28.0
+pandas>=2.0
+plotly>=5.18
