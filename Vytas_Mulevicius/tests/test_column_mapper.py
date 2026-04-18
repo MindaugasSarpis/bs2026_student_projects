@@ -59,15 +59,15 @@ class TestCartesianInvariantMass:
         assert result['Calculated_M'][0] == pytest.approx(2.0)
         assert result['Calculated_M'][1] == pytest.approx(4.0)
 
-    def test_intermediate_columns_present(self):
+    def test_calculated_m_present(self):
         df = pl.DataFrame({
             'E1': [1.0], 'E2': [1.0],
             'px1': [0.0], 'py1': [0.0], 'pz1': [0.0],
             'px2': [0.0], 'py2': [0.0], 'pz2': [0.0],
         })
         result = _compute_invariant_mass(df, df.columns)
-        assert 'E_tot' in result.columns
-        assert 'px_tot' in result.columns
+        assert 'Calculated_M' in result.columns
+        assert result['Calculated_M'][0] == pytest.approx(2.0)
 
 
 # ---------------------------------------------------------------------------

@@ -87,6 +87,7 @@ def _handle_preview(rec_id: str | int, fname: str, furl: str) -> None:
 
 def _stream_to_analysis(url: str) -> None:
     st.session_state.stream_url = url
+    st.session_state.data_source = "Remote Stream (XRootD/HTTP)"
     st.session_state.nav_to_analysis = True
 
 
@@ -123,7 +124,14 @@ def _peek_root_file(furl: str, fname: str, rec_id: str | int) -> None:
                 st.success(f"Successfully bridged to `{fname}`")
     except Exception as e:
         st.error(f"Network error peeking ROOT file: {e}")
-        st.info("💡 **Tip:** This large file might require a local download for full inspection.")
+        if "outside expected range" in str(e).lower():
+            st.warning("⚠️ **Header Fragmentation Detected:** This file's internal directory is fragmented across the network.")
+            st.info(
+                "💡 **Solution:** Click **🌊 Stream** instead. Streaming uses a robust two-phase download that "
+                "handles fragmented headers perfectly by buffering the file locally."
+            )
+        else:
+            st.info("💡 **Tip:** This large or complex file might require a local download (**📥 Fetch**) for full inspection.")
 
 
 def _render_root_tree_inspector(furl: str, rec_id: str | int, fname: str) -> None:
@@ -146,3 +154,5 @@ def _render_root_tree_inspector(furl: str, rec_id: str | int, fname: str) -> Non
                         st.json(root_file[selected_tree].keys())
             except Exception as e:
                 st.error(f"Could not read branches: {e}")
+                if "outside expected range" in str(e).lower():
+                    st.info("💡 **Tip:** This tree's metadata is too complex for a network peek. Use **🌊 Stream** to analyze it instead.")

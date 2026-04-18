@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from scripts.davinci_macros.make_ntuple import generate_davinci_config
-from lib.ui_utils import apply_branding
+from lib.ui_utils import apply_branding, render_sidebar_footer
 
 st.set_page_config(page_title="CERN Explorer | Macros", page_icon="⚛️", layout="wide")
 
@@ -56,3 +56,5 @@ with col2:
     )
 
 st.info("💡 **Tip:** To find the exact Stripping Line name, run the `find_stripping_lines.py` script from the `scripts/davinci_macros/` directory on a CERN login node.")
+
+render_sidebar_footer()

@@ -21,8 +21,8 @@ QUICK_PICKS = {
 }
 
 
-@st.cache_data(ttl=3600)
-def get_cern_data(query: str, only_csv: bool = True) -> dict[str, Any]:
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_cern_data(query: str, only_csv: bool = True, size: int = 15, page: int = 1) -> dict[str, Any]:
     """
     Queries the CERN Open Data REST API and returns the parsed JSON response.
 
@@ -31,7 +31,7 @@ def get_cern_data(query: str, only_csv: bool = True) -> dict[str, Any]:
     or parse failures.
     """
     try:
-        api_url = f"https://opendata.cern.ch/api/records/?q={query.replace(' ', '+')}&size=15"
+        api_url = f"https://opendata.cern.ch/api/records/?q={query.replace(' ', '+')}&size={size}&page={page}"
         if only_csv:
             api_url += "&f=file_format:CSV&f=type:Dataset"
         req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
