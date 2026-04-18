@@ -1,54 +1,72 @@
-.PHONY: help install dev-up dev-down migrate worker beat api test lint typecheck flower keywords-import keywords-list keywords-export
+.PHONY: help up down build logs ps clean migrate migrate-new \
+        api worker beat lint typecheck \
+        keywords-import keywords-import-dry keywords-list keywords-export
+
+DC = docker compose
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
-install:  ## Install all dependencies and Playwright browsers
-	pip install -e ".[dev]"
-	playwright install chromium
+# ---------------------------------------------------------------------------
+# Docker Compose
+# ---------------------------------------------------------------------------
 
-dev-up:  ## Start local dev stack via docker-compose
-	docker-compose up -d
-	@echo "Services:"
-	@echo "  Postgres        → localhost:5432"
-	@echo "  Redis           → localhost:6379"
-	@echo "  Elasticsearch   → localhost:9200"
-	@echo "  Grafana         → http://localhost:3000  (admin/repops)"
-	@echo "  Prometheus      → http://localhost:9090"
-	@echo "  Loki            → localhost:3100"
-	@echo "  Flower          → http://localhost:5555"
+up: build  ## Build image, start all services, run migrations
+	$(DC) up -d
+	@echo "Waiting for database to be ready..."
+	@sleep 5
+	$(DC) exec api alembic upgrade head
+	@echo ""
+	@echo "  Admin UI  → http://localhost:8000/admin"
+	@echo "  API docs  → http://localhost:8000/docs"
+	@echo "  Grafana   → http://localhost:3000  (admin / repops)"
+	@echo "  Flower    → http://localhost:5555"
 
-dev-down:  ## Stop local dev stack
-	docker-compose down
+down:  ## Stop all services
+	$(DC) down
 
-migrate:  ## Run Alembic DB migrations
-	alembic upgrade head
+build:  ## Build the repops Docker image
+	$(DC) build
 
-migrate-new:  ## Create new Alembic migration (MSG= required)
+logs:  ## Tail logs from all services
+	$(DC) logs -f
+
+ps:  ## Show running container status
+	$(DC) ps
+
+clean:  ## Stop all services and delete all volumes (destructive)
+	$(DC) down -v --remove-orphans
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
+
+migrate:  ## Apply all pending Alembic migrations
+	$(DC) exec api alembic upgrade head
+
+migrate-new:  ## Create a new migration (MSG= required)
 	alembic revision --autogenerate -m "$(MSG)"
 
-worker:  ## Start Celery worker (all queues)
-	celery -A repops.workers.app worker --loglevel=info \
-		-Q collection,analysis,reporting,default
+# ---------------------------------------------------------------------------
+# Local development (outside Docker)
+# ---------------------------------------------------------------------------
 
-beat:  ## Start Celery beat scheduler
-	celery -A repops.workers.app beat --loglevel=info --scheduler celery.beat:PersistentScheduler
+install:  ## Install Python dependencies
+	pip install -e ".[dev]"
 
 api:  ## Start FastAPI dev server with hot-reload
 	uvicorn repops.api.main:app --reload --host 0.0.0.0 --port 8000
 
-flower:  ## Start Celery Flower task monitor
-	celery -A repops.workers.app flower --port=5555
+worker:  ## Start Celery worker
+	celery -A repops.workers.app worker --loglevel=info -Q collection,analysis,default
 
-test:  ## Run full test suite with coverage
-	pytest --cov=repops --cov-report=term-missing --cov-report=html
+beat:  ## Start Celery beat scheduler
+	celery -A repops.workers.app beat --loglevel=info
 
-test-unit:  ## Run unit tests only
-	pytest tests/unit/ -v
-
-test-integration:  ## Run integration tests (requires docker-compose up)
-	pytest tests/integration/ -v
+# ---------------------------------------------------------------------------
+# Quality
+# ---------------------------------------------------------------------------
 
 lint:  ## Lint and auto-fix with ruff
 	ruff check . --fix
@@ -57,9 +75,13 @@ lint:  ## Lint and auto-fix with ruff
 typecheck:  ## Run mypy type checker
 	mypy repops/
 
-ci: lint typecheck test  ## Full CI check (lint + types + tests)
+ci: lint typecheck  ## Full CI check (lint + types)
 
-keywords-import:  ## Load data/keywords/keywords.csv into the database
+# ---------------------------------------------------------------------------
+# Keywords
+# ---------------------------------------------------------------------------
+
+keywords-import:  ## Import data/keywords/keywords.csv into the database
 	python scripts/import_keywords.py
 
 keywords-import-dry:  ## Preview what keywords-import would change (no DB writes)
@@ -68,5 +90,5 @@ keywords-import-dry:  ## Preview what keywords-import would change (no DB writes
 keywords-list:  ## Print all keywords currently in the database
 	python scripts/import_keywords.py --list
 
-keywords-export:  ## Export the database keyword list back to a CSV file
+keywords-export:  ## Export keyword database back to CSV
 	python scripts/import_keywords.py --export data/keywords/keywords_export.csv
