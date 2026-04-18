@@ -125,7 +125,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_keyword_matches_total[24h])",
+          "expr": "round(sum(increase(repops_keyword_matches_total[24h])))",
           "instant": true,
           "legendFormat": "Matches",
           "refId": "A"
@@ -178,50 +178,13 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_posts_flagged_total[24h])",
+          "expr": "round(sum(increase(repops_posts_flagged_total[24h])))",
           "instant": true,
           "legendFormat": "Flagged",
           "refId": "A"
         }
       ],
       "title": "Posts Flagged (24h)",
-      "type": "stat"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "unit": "ms"
-        }
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 0
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "histogram_quantile(0.95, rate(repops_analysis_duration_seconds_bucket[10m])) * 1000",
-          "instant": true,
-          "legendFormat": "p95",
-          "refId": "A"
-        }
-      ],
-      "title": "Analysis p95 Latency",
       "type": "stat"
     },
     {
@@ -250,7 +213,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 20,
+        "x": 16,
         "y": 0
       },
       "id": 6,
@@ -268,7 +231,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum(repops_queue_depth)",
+          "expr": "sum(max by (queue_name) (repops_queue_depth))",
           "instant": true,
           "legendFormat": "Total queued",
           "refId": "A"
@@ -308,8 +271,8 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "round(sum by (post_type) (increase(repops_posts_collected_total[5m])))",
-          "legendFormat": "Collected ({{post_type}})",
+          "expr": "round(sum(increase(repops_posts_collected_total{post_type=\"COMMENT\"}[5m])) or on() vector(0))",
+          "legendFormat": "Collected (comment)",
           "refId": "A"
         },
         {
@@ -317,7 +280,16 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "round(increase(repops_posts_analyzed_total[5m]))",
+          "expr": "round(sum(increase(repops_posts_collected_total{post_type=\"POST\"}[5m])) or on() vector(0))",
+          "legendFormat": "Collected (post)",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "round(sum(increase(repops_posts_analyzed_total[5m])) or on() vector(0))",
           "legendFormat": "analyzed",
           "refId": "B"
         },
@@ -326,7 +298,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "round(increase(repops_posts_flagged_total[5m]))",
+          "expr": "round(sum(increase(repops_posts_flagged_total[5m])) or on() vector(0))",
           "legendFormat": "flagged",
           "refId": "C"
         }
@@ -353,7 +325,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "repops_queue_depth",
+          "expr": "max by (queue_name) (repops_queue_depth)",
           "legendFormat": "{{queue_name}}",
           "refId": "A"
         }
@@ -362,95 +334,24 @@
       "type": "timeseries"
     },
     {
-      "description": "Which keywords are being matched (rate per 5m).",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 12,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(repops_keyword_hits_total[5m])",
-          "legendFormat": "{{pattern}} ({{severity}})",
-          "refId": "A"
-        }
-      ],
-      "title": "Keyword Hits by Pattern",
-      "type": "timeseries"
-    },
-    {
-      "description": "Percentile distribution of hate-speech model scores. p50=median, p90/p99=outliers approaching flagging threshold (0.6).",
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "max": 1,
-          "unit": "percentunit",
-          "custom": {
-            "lineWidth": 2
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 0.6 },
-              { "color": "red", "value": 0.9 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 12
-      },
-      "id": 13,
-      "options": {
-        "tooltip": { "mode": "multi" }
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(repops_analysis_hate_speech_score_bucket[10m])))",
-          "legendFormat": "p50 (median)",
-          "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "histogram_quantile(0.9, sum by (le) (rate(repops_analysis_hate_speech_score_bucket[10m])))",
-          "legendFormat": "p90",
-          "refId": "B"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(repops_analysis_hate_speech_score_bucket[10m])))",
-          "legendFormat": "p99",
-          "refId": "C"
-        }
-      ],
-      "title": "Analysis Score Percentiles (last 10m)",
-      "type": "timeseries"
-    },
-    {
       "description": "Structured logs from API and Worker. Filter by service={api,worker} or level={info,error,warning}.",
       "gridPos": {
         "h": 14,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 12
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
       },
       "id": 20,
       "options": {
         "dedupStrategy": "none",
+        "enableLogDetails": true,
         "showLabels": true,
         "showTime": true,
+        "showSearch": true,
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
@@ -462,6 +363,7 @@
           },
           "expr": "{job=\"repops\"}",
           "legendFormat": "",
+          "queryType": "range",
           "refId": "A"
         }
       ],
@@ -469,57 +371,12 @@
       "type": "logs"
     },
     {
-      "description": "Count of error-level log lines per minute.",
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 34
-      },
-      "id": 21,
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
-          },
-          "expr": "sum by (service) (rate({job=\"repops\", level=\"error\"}[1m]))",
-          "legendFormat": "{{service}} errors",
-          "refId": "A"
-        }
-      ],
-      "title": "Error Log Rate",
-      "type": "timeseries"
-    },
-    {
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 34
-      },
-      "id": 22,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(repops_collection_errors_total[5m])",
-          "legendFormat": "{{error_type}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Collection Errors (Prometheus)",
-      "type": "timeseries"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 26
       },
       "id": 23,
       "title": "Worker & Task Monitoring",
@@ -570,7 +427,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 42
+        "y": 27
       },
       "id": 24,
       "options": {
@@ -622,7 +479,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 42
+        "y": 27
       },
       "id": 25,
       "options": {
@@ -677,7 +534,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 42
+        "y": 27
       },
       "id": 26,
       "options": {
@@ -694,7 +551,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum(flower_events_total{type=\"task-failed\"})",
+          "expr": "sum(flower_events_total{type=\"task-failed\"}) or vector(0)",
           "instant": true,
           "refId": "A"
         }
@@ -750,7 +607,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 46
+        "y": 31
       },
       "id": 28,
       "options": {
@@ -773,7 +630,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "round(sum(increase(flower_events_total{type=\"task-failed\"}[5m])))",
+          "expr": "round(sum(increase(flower_events_total{type=\"task-failed\"}[5m])) or on() vector(0))",
           "legendFormat": "Failed",
           "refId": "B"
         }
@@ -798,7 +655,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 46
+        "y": 31
       },
       "id": 29,
       "options": {

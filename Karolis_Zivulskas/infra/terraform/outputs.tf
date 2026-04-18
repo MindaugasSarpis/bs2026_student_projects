@@ -23,7 +23,3 @@ output "flower_url" {
   value       = "http://${aws_eip.app.public_ip}:5555"
 }
 
-output "s3_evidence_bucket" {
-  description = "S3 bucket for evidence storage"
-  value       = aws_s3_bucket.evidence.bucket
-}

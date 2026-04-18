@@ -36,24 +36,7 @@ services:
       timeout: 5s
       retries: 5
 
-  elasticsearch:
-    image: elasticsearch:8.13.4
-    restart: unless-stopped
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
-      interval: 20s
-      timeout: 10s
-      retries: 10
-
-  # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
   # Observability stack
   # ---------------------------------------------------------------------------
   loki:
@@ -137,7 +120,6 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       ENVIRONMENT: "${ENVIRONMENT:-production}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-      AWS_REGION: "${AWS_REGION:-eu-west-1}"
       LOG_FILE: "/logs/api.log"
       ADMIN_USERNAME: "${ADMIN_USERNAME:-repops}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-changeme}"
@@ -149,10 +131,26 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  beat:
+    build: .
+    image: repops:latest
+    restart: unless-stopped
+    command: ["celery", "-A", "repops.workers.app", "beat", "--loglevel=info"]
+    environment:
+      DATABASE_URL: "postgresql+psycopg://repops:${POSTGRES_PASSWORD:-repops}@postgres:5432/repops"
+      REDIS_URL: "redis://redis:6379/0"
+      ENVIRONMENT: "${ENVIRONMENT:-production}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   worker:
     build: .
@@ -166,7 +164,6 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       ENVIRONMENT: "${ENVIRONMENT:-production}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-      AWS_REGION: "${AWS_REGION:-eu-west-1}"
       APIFY_TOKEN: "${APIFY_TOKEN:-}"
       LOG_FILE: "/logs/worker.log"
       PROMETHEUS_MULTIPROC_DIR: "/tmp/prom_multiproc"
@@ -181,7 +178,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  es_data:
   loki_data:
   prometheus_data:
   grafana_data:

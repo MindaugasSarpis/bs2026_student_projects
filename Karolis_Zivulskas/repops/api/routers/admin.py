@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from repops.api.dependencies import get_db
-from repops.models import AnalysisResult, KeywordEntry, KeywordSet, Post, PostStatus, Target, TargetType
+from repops.models import AnalysisLabel, AnalysisResult, KeywordEntry, KeywordSet, Post, PostStatus, Target, TargetType
 from repops.settings import settings
 from repops.workers.app import app as celery_app
 
@@ -111,7 +111,8 @@ def delete_target(target_id: uuid.UUID, db: DB) -> RedirectResponse:
 def flagged_page(request: Request, db: DB) -> HTMLResponse:
     posts = list(db.scalars(
         select(Post)
-        .where(Post.status.in_([PostStatus.FLAGGED, PostStatus.CLEARED]))
+        .join(AnalysisResult, AnalysisResult.post_id == Post.id)
+        .where(AnalysisResult.overall_label != AnalysisLabel.CLEAN)
         .order_by(Post.created_at.desc())
         .limit(200)
     ).all())
@@ -133,7 +134,7 @@ def flagged_page(request: Request, db: DB) -> HTMLResponse:
 @router.post("/flagged/{post_id}/review")
 def mark_reviewed(post_id: uuid.UUID, db: DB) -> RedirectResponse:
     post = db.get(Post, post_id)
-    if post and post.status == PostStatus.FLAGGED:
+    if post and post.status in (PostStatus.FLAGGED, PostStatus.ANALYZED):
         post.status = PostStatus.CLEARED
         db.commit()
     return RedirectResponse("/admin/flagged", status_code=303)

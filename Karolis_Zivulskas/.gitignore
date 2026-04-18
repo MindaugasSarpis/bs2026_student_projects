@@ -22,7 +22,6 @@ htmlcov/
 .ruff_cache/
 
 # ---- Environment ----
-.env
 .env.local
 .env.*.local
 

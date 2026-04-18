@@ -83,7 +83,7 @@ class ApifyScraper:
         logger.info("apify_run_done", actor=actor_id, run_id=run_id, items=len(items))
         return items
 
-    async def scrape_page(self, page_id: str, max_posts: int = 10) -> list[ScrapedPost]:
+    async def scrape_page(self, page_id: str, max_posts: int = 5, max_comments: int = 50) -> list[ScrapedPost]:
         """Scrape recent posts + comments via Apify. Returns list[ScrapedPost]."""
         await facebook_scrape_limiter.acquire()
 
@@ -96,7 +96,7 @@ class ApifyScraper:
                 _POSTS_ACTOR,
                 {
                     "startUrls": [{"url": fb_url}],
-                    "maxPosts": max_posts,
+                    "resultsLimit": max_posts,
                 },
             )
         except Exception as exc:
@@ -137,7 +137,7 @@ class ApifyScraper:
                 _COMMENTS_ACTOR,
                 {
                     "startUrls": [{"url": u} for u in post_urls],
-                    "maxComments": 200,
+                    "maxComments": max_comments,
                 },
                 timeout_secs=600,
             )

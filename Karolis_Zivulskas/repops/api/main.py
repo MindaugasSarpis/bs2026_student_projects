@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(
     title="RepOps",
-    description="Reputation Operations — social media monitoring & disinformation reporting",
+    description="Reputation Operations — social media monitoring & analysis",
     version="0.1.0",
     lifespan=lifespan,
     docs_url="/docs",

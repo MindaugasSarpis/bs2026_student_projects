@@ -17,7 +17,7 @@ variable "app_name" {
 }
 
 variable "ec2_instance_type" {
-  description = "EC2 instance type — t3.medium recommended (Playwright + Elasticsearch + all services)"
+  description = "EC2 instance type"
   type        = string
   default     = "t3.medium"
 }
@@ -33,7 +33,3 @@ variable "allowed_ssh_cidr" {
   default     = "0.0.0.0/0"
 }
 
-variable "s3_evidence_bucket" {
-  description = "S3 bucket name for evidence storage (must be globally unique)"
-  type        = string
-}

@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 
     # Apify
     apify_token: str = ""
+    scraper_max_posts: int = Field(default=5, ge=1, le=500)
+    scraper_max_comments: int = Field(default=50, ge=1, le=500)
 
     # Admin UI
     admin_username: str = "repops"

@@ -82,7 +82,7 @@ def configure_logging() -> None:
     root.setLevel(log_level)
 
     # Silence noisy third-party loggers
-    for noisy in ("urllib3", "httpcore", "playwright", "asyncio"):
+    for noisy in ("urllib3", "httpcore", "asyncio"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     _configured = True
