@@ -1,27 +1,23 @@
 {
-  "title": "RepOps - Platform Overview",
-  "uid": "repops-overview",
-  "tags": [
-    "repops"
-  ],
-  "timezone": "browser",
-  "schemaVersion": 38,
-  "refresh": "30s",
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
+  "id": 2,
   "panels": [
     {
-      "id": 1,
-      "title": "Posts Collected (24h)",
-      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "noValue": "0"
+        }
+      },
       "gridPos": {
         "h": 4,
         "w": 4,
         "x": 0,
         "y": 0
       },
+      "id": 1,
       "options": {
         "colorMode": "value",
         "reduceOptions": {
@@ -30,38 +26,38 @@
           ]
         }
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "noValue": "0"
-        }
-      },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_posts_collected_total[24h])",
-          "legendFormat": "Posts",
-          "instant": true
+          "expr": "round(sum by (post_type) (increase(repops_posts_collected_total[24h])))",
+          "instant": true,
+          "legendFormat": "{{post_type}}",
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Posts Collected (last 24h, Prometheus)",
+      "type": "stat"
     },
     {
-      "id": 2,
-      "title": "Posts Analyzed (24h)",
-      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "noValue": "0"
+        }
+      },
       "gridPos": {
         "h": 4,
         "w": 4,
         "x": 4,
         "y": 0
       },
+      "id": 2,
       "options": {
         "colorMode": "value",
         "reduceOptions": {
@@ -70,46 +66,22 @@
           ]
         }
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "blue"
-          },
-          "noValue": "0"
-        }
-      },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "increase(repops_posts_analyzed_total[24h])",
+          "instant": true,
           "legendFormat": "Analyzed",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Posts Analyzed (24h)",
+      "type": "stat"
     },
     {
-      "id": 3,
-      "title": "Keyword Matches (24h)",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 0
-      },
-      "options": {
-        "colorMode": "background",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      },
       "fieldConfig": {
         "defaults": {
           "noValue": "0",
@@ -132,29 +104,13 @@
           }
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(repops_keyword_matches_total[24h])",
-          "legendFormat": "Matches",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Posts Flagged (24h)",
-      "type": "stat",
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 12,
+        "x": 8,
         "y": 0
       },
+      "id": 3,
       "options": {
         "colorMode": "background",
         "reduceOptions": {
@@ -163,6 +119,22 @@
           ]
         }
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "round(sum(increase(repops_keyword_matches_total[24h])))",
+          "instant": true,
+          "legendFormat": "Matches",
+          "refId": "A"
+        }
+      ],
+      "title": "Keyword Matches (24h)",
+      "type": "stat"
+    },
+    {
       "fieldConfig": {
         "defaults": {
           "noValue": "0",
@@ -185,66 +157,13 @@
           }
         }
       },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(repops_posts_flagged_total[24h])",
-          "legendFormat": "Flagged",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "title": "Analysis p95 Latency",
-      "type": "stat",
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 16,
+        "x": 12,
         "y": 0
       },
-      "options": {
-        "colorMode": "value",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms",
-          "noValue": "0"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "histogram_quantile(0.95, rate(repops_analysis_duration_seconds_bucket[10m])) * 1000",
-          "legendFormat": "p95",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "title": "Queue Depth",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 0
-      },
+      "id": 4,
       "options": {
         "colorMode": "background",
         "reduceOptions": {
@@ -253,6 +172,22 @@
           ]
         }
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "round(sum(increase(repops_posts_flagged_total[24h])))",
+          "instant": true,
+          "legendFormat": "Flagged",
+          "refId": "A"
+        }
+      ],
+      "title": "Posts Flagged (24h)",
+      "type": "stat"
+    },
+    {
       "fieldConfig": {
         "defaults": {
           "noValue": "0",
@@ -275,39 +210,38 @@
           }
         }
       },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum(repops_queue_depth)",
+          "expr": "sum(max by (queue_name) (repops_queue_depth))",
+          "instant": true,
           "legendFormat": "Total queued",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Queue Depth",
+      "type": "stat"
     },
     {
-      "id": 10,
-      "title": "Collection & Analysis Throughput",
       "description": "Posts collected, analyzed, and flagged per 5-minute window.",
-      "type": "timeseries",
-      "gridPos": {
-        "h": 8,
-        "w": 14,
-        "x": 0,
-        "y": 4
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        }
-      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -315,46 +249,71 @@
           }
         }
       },
+      "gridPos": {
+        "h": 8,
+        "w": 14,
+        "x": 0,
+        "y": 4
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_posts_collected_total[5m])",
-          "legendFormat": "collected"
+          "expr": "round(sum(increase(repops_posts_collected_total{post_type=\"COMMENT\"}[5m])) or on() vector(0))",
+          "legendFormat": "Collected (comment)",
+          "refId": "A"
         },
         {
-          "refId": "B",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_posts_analyzed_total[5m])",
-          "legendFormat": "analyzed"
+          "expr": "round(sum(increase(repops_posts_collected_total{post_type=\"POST\"}[5m])) or on() vector(0))",
+          "legendFormat": "Collected (post)",
+          "refId": "D"
         },
         {
-          "refId": "C",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_posts_flagged_total[5m])",
-          "legendFormat": "flagged"
+          "expr": "round(sum(increase(repops_posts_analyzed_total[5m])) or on() vector(0))",
+          "legendFormat": "analyzed",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "round(sum(increase(repops_posts_flagged_total[5m])) or on() vector(0))",
+          "legendFormat": "flagged",
+          "refId": "C"
         }
-      ]
+      ],
+      "title": "Collection & Analysis Throughput",
+      "type": "timeseries"
     },
     {
-      "id": 11,
-      "title": "Celery Queue Depth by Queue",
-      "type": "timeseries",
       "gridPos": {
         "h": 8,
         "w": 10,
         "x": 14,
         "y": 4
       },
+      "id": 11,
       "options": {
         "tooltip": {
           "mode": "multi"
@@ -362,60 +321,199 @@
       },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "repops_queue_depth",
-          "legendFormat": "{{queue_name}}"
+          "expr": "max by (queue_name) (repops_queue_depth)",
+          "legendFormat": "{{queue_name}}",
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Celery Queue Depth by Queue",
+      "type": "timeseries"
     },
     {
-      "id": 12,
-      "title": "Keyword Hits by Pattern",
-      "description": "Which keywords are being matched (rate per 5m).",
-      "type": "timeseries",
+      "description": "Structured logs from API and Worker. Filter by service={api,worker} or level={info,error,warning}.",
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 14,
+        "w": 24,
         "x": 0,
         "y": 12
       },
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "id": 20,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "showLabels": true,
+        "showTime": true,
+        "showSearch": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "increase(repops_keyword_hits_total[5m])",
-          "legendFormat": "{{pattern}} ({{severity}})"
+          "expr": "{job=\"repops\"}",
+          "legendFormat": "",
+          "queryType": "range",
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Application Logs - All Services",
+      "type": "logs"
     },
     {
-      "id": 13,
-      "title": "Analysis Score Distribution (last 10m)",
-      "description": "Histogram of hate-speech scores - shows how close content gets to flagging thresholds.",
-      "type": "bargauge",
+      "collapsed": false,
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 12
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
       },
+      "id": 23,
+      "title": "Worker & Task Monitoring",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "OFFLINE"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "ONLINE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 27
+      },
+      "id": 24,
       "options": {
-        "orientation": "horizontal",
+        "colorMode": "background",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ]
         }
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "sum(flower_worker_online)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Worker Online",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 27
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "sum(flower_events_total{type=\"task-succeeded\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Tasks Processed (total)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -424,103 +522,173 @@
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 0.001
-              },
-              {
                 "color": "red",
-                "value": 0.01
+                "value": 1
               }
             ]
           }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 27
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
         }
       },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_analysis_hate_speech_score_bucket[10m])",
-          "legendFormat": "le={{le}}"
+          "expr": "sum(flower_events_total{type=\"task-failed\"}) or vector(0)",
+          "instant": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Tasks Failed (total)",
+      "type": "stat"
     },
     {
-      "id": 20,
-      "title": "Application Logs - All Services",
-      "description": "Structured logs from API and Worker. Filter by service={api,worker} or level={info,error,warning}.",
-      "type": "logs",
-      "gridPos": {
-        "h": 14,
-        "w": 24,
-        "x": 0,
-        "y": 20
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
       },
-      "options": {
-        "showTime": true,
-        "showLabels": true,
-        "wrapLogMessage": false,
-        "sortOrder": "Descending",
-        "dedupStrategy": "none"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 2
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
           },
-          "expr": "{job=\"repops\"}",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "id": 21,
-      "title": "Error Log Rate",
-      "description": "Count of error-level log lines per minute.",
-      "type": "timeseries",
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Succeeded"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 31
+      },
+      "id": 28,
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum by (service) (rate({job=\"repops\", level=\"error\"}[1m]))",
-          "legendFormat": "{{service}} errors"
+          "expr": "round(sum(increase(flower_events_total{type=\"task-succeeded\"}[5m])))",
+          "legendFormat": "Succeeded",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "round(sum(increase(flower_events_total{type=\"task-failed\"}[5m])) or on() vector(0))",
+          "legendFormat": "Failed",
+          "refId": "B"
         }
-      ]
+      ],
+      "title": "Task Success vs Failed Rate",
+      "type": "timeseries"
     },
     {
-      "id": 22,
-      "title": "Collection Errors (Prometheus)",
-      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 31
+      },
+      "id": 29,
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
-          "refId": "A",
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "increase(repops_collection_errors_total[5m])",
-          "legendFormat": "{{error_type}}"
+          "expr": "round(sum by (task) (increase(flower_events_total{type=\"task-succeeded\",task!=\"\"}[5m])))",
+          "legendFormat": "{{task}}",
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Tasks Succeeded by Type",
+      "type": "timeseries"
     }
-  ]
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": [
+    "repops"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "RepOps - Platform Overview",
+  "uid": "repops-overview",
+  "version": 22
 }

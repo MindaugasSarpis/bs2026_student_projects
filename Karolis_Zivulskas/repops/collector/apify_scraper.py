@@ -83,7 +83,7 @@ class ApifyScraper:
         logger.info("apify_run_done", actor=actor_id, run_id=run_id, items=len(items))
         return items
 
-    async def scrape_page(self, page_id: str, max_posts: int = 10) -> list[ScrapedPost]:
+    async def scrape_page(self, page_id: str, max_posts: int = 5, max_comments: int = 50) -> list[ScrapedPost]:
         """Scrape recent posts + comments via Apify. Returns list[ScrapedPost]."""
         await facebook_scrape_limiter.acquire()
 
@@ -96,7 +96,7 @@ class ApifyScraper:
                 _POSTS_ACTOR,
                 {
                     "startUrls": [{"url": fb_url}],
-                    "maxPosts": max_posts,
+                    "resultsLimit": max_posts,
                 },
             )
         except Exception as exc:
@@ -137,7 +137,7 @@ class ApifyScraper:
                 _COMMENTS_ACTOR,
                 {
                     "startUrls": [{"url": u} for u in post_urls],
-                    "maxComments": 200,
+                    "maxComments": max_comments,
                 },
                 timeout_secs=600,
             )
@@ -157,8 +157,9 @@ class ApifyScraper:
             if not comment_id:
                 continue
 
-            # Author: prefer profileId, fall back to last path segment of profileUrl
-            author_id: str | None = str(item["profileId"]) if item.get("profileId") else None
+            # Author: prefer profileId, fall back to profileUrl path+query (preserves profile.php?id=xxx)
+            raw_pid = item.get("profileId")
+            author_id: str | None = str(raw_pid) if raw_pid and str(raw_pid) != "profile.php" else None
             if not author_id:
                 profile_url = item.get("profileUrl") or ""
                 seg = profile_url.rstrip("/").split("/")[-1]

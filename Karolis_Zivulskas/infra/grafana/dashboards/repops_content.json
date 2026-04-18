@@ -82,7 +82,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p JOIN targets t ON t.id = p.target_id\nWHERE ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p JOIN targets t ON t.id = p.target_id\nWHERE p.post_type::text = 'POST'\n  AND t.facebook_id IN (${target:singlequote})\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz",
           "refId": "A"
         }
       ],
@@ -150,7 +150,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p JOIN targets t ON t.id = p.target_id\nWHERE post_type::text = 'COMMENT'\n  AND ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p JOIN targets t ON t.id = p.target_id\nWHERE post_type::text = 'COMMENT'\n  AND (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz",
           "refId": "A"
         }
       ],
@@ -218,7 +218,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()",
+          "rawSql": "SELECT COUNT(*) AS value\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz",
           "refId": "A"
         }
       ],
@@ -286,7 +286,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT p.author_id) AS value\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND p.author_id IS NOT NULL\n  AND ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()",
+          "rawSql": "SELECT COUNT(DISTINCT p.author_id) AS value\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND p.author_id IS NOT NULL\n  AND (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz",
           "refId": "A"
         }
       ],
@@ -587,7 +587,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  p.posted_at,\n  t.name AS target,\n  COALESCE(pr.name, SUBSTRING(pr.facebook_id, 1, 25)) AS author,\n  p.post_type AS type,\n  LEFT(p.content, 350) AS content,\n  COALESCE(ar.overall_label::text, 'pending') AS label,\n  ROUND(COALESCE(ar.overall_score, 0)::numeric, 2) AS score,\n  ARRAY_TO_STRING(COALESCE(ar.matched_keywords, '{}'), ', ') AS keywords,\n  p.url\nFROM posts p\nLEFT JOIN analysis_results ar ON ar.post_id = p.id\nLEFT JOIN profiles pr ON pr.id = p.author_id\nJOIN targets t ON t.id = p.target_id\nWHERE ('$target' = '.*' OR t.facebook_id = '$target')\n  AND ('$post_type' = 'ALL' OR p.post_type::text = '$post_type')\n  AND p.created_at >= $__timeFrom()\n  AND p.created_at <= $__timeTo()\nORDER BY p.posted_at DESC\nLIMIT 300",
+          "rawSql": "SELECT\n  p.posted_at,\n  t.name AS target,\n  COALESCE(pr.name, SUBSTRING(pr.facebook_id, 1, 25)) AS author,\n  p.post_type AS type,\n  LEFT(p.content, 350) AS content,\n  COALESCE(ar.overall_label::text, 'pending') AS label,\n  ROUND(COALESCE(ar.overall_score, 0)::numeric, 2) AS score,\n  ARRAY_TO_STRING(COALESCE(ar.matched_keywords, '{}'), ', ') AS keywords,\n  p.url\nFROM posts p\nLEFT JOIN analysis_results ar ON ar.post_id = p.id\nLEFT JOIN profiles pr ON pr.id = p.author_id\nJOIN targets t ON t.id = p.target_id\nWHERE (t.facebook_id IN (${target:singlequote}))\n  AND (p.post_type::text IN (${post_type:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz\n  AND p.created_at <= '${__to:date:iso}'::timestamptz\nORDER BY p.posted_at DESC\nLIMIT 300",
           "refId": "A"
         }
       ],
@@ -613,6 +613,7 @@
         },
         "orientation": "auto",
         "stacking": "normal",
+        "xField": "day",
         "xTickLabelRotation": -30
       },
       "targets": [
@@ -624,7 +625,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  DATE_TRUNC('day', p.created_at)::date AS day,\n  p.post_type::text AS type,\n  COUNT(*) AS count\nFROM posts p\nJOIN targets t ON t.id = p.target_id\nWHERE ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()\nGROUP BY 1, 2\nORDER BY 1",
+          "rawSql": "SELECT\n  DATE_TRUNC('day', p.created_at)::date AS day,\n  COUNT(*) FILTER (WHERE p.post_type::text = 'POST') AS \"Posts\",\n  COUNT(*) FILTER (WHERE p.post_type::text = 'COMMENT') AS \"Comments\"\nFROM posts p\nJOIN targets t ON t.id = p.target_id\nWHERE t.facebook_id IN (${target:singlequote})\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz\nGROUP BY 1\nORDER BY 1",
           "refId": "A"
         }
       ],
@@ -660,7 +661,8 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ar.overall_label::text AS label, COUNT(*) AS count\nFROM analysis_results ar\nJOIN posts p ON p.id = ar.post_id\nJOIN targets t ON t.id = p.target_id\nWHERE ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()\nGROUP BY ar.overall_label\nORDER BY count DESC",
+          "rawSql": "SELECT NOW() AS time, ar.overall_label::text AS metric, COUNT(*) AS value\nFROM analysis_results ar\nJOIN posts p ON p.id = ar.post_id\nJOIN targets t ON t.id = p.target_id\nWHERE (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz\nGROUP BY ar.overall_label\nORDER BY value DESC",
+          "format": "time_series",
           "refId": "A"
         }
       ],
@@ -696,7 +698,8 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT p.status::text AS status, COUNT(*) AS count\nFROM posts p\nJOIN targets t ON t.id = p.target_id\nWHERE ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()\nGROUP BY p.status\nORDER BY count DESC",
+          "rawSql": "SELECT NOW() AS time, p.status::text AS metric, COUNT(*) AS value\nFROM posts p\nJOIN targets t ON t.id = p.target_id\nWHERE (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz\nGROUP BY p.status\nORDER BY value DESC",
+          "format": "time_series",
           "refId": "A"
         }
       ],
@@ -807,7 +810,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  p.posted_at,\n  t.name AS target,\n  COALESCE(pr.name, SUBSTRING(pr.facebook_id, 1, 25)) AS author,\n  p.post_type::text AS type,\n  LEFT(p.content, 350) AS content,\n  ARRAY_TO_STRING(ar.matched_keywords, ', ') AS keywords,\n  ar.keyword_severity::text AS severity,\n  ROUND(ar.overall_score::numeric, 2) AS score,\n  ar.overall_label::text AS label,\n  p.url\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nLEFT JOIN profiles pr ON pr.id = p.author_id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND ('$target' = '.*' OR t.facebook_id = '$target')\n  AND p.created_at >= $__timeFrom() AND p.created_at <= $__timeTo()\nORDER BY p.posted_at DESC\nLIMIT 500",
+          "rawSql": "SELECT\n  p.posted_at,\n  t.name AS target,\n  COALESCE(pr.name, SUBSTRING(pr.facebook_id, 1, 25)) AS author,\n  p.post_type::text AS type,\n  LEFT(p.content, 350) AS content,\n  ARRAY_TO_STRING(ar.matched_keywords, ', ') AS keywords,\n  ar.keyword_severity::text AS severity,\n  ROUND(ar.overall_score::numeric, 2) AS score,\n  ar.overall_label::text AS label,\n  p.url\nFROM posts p\nJOIN analysis_results ar ON ar.post_id = p.id\nLEFT JOIN profiles pr ON pr.id = p.author_id\nJOIN targets t ON t.id = p.target_id\nWHERE ar.overall_label != 'CLEAN'\n  AND (t.facebook_id IN (${target:singlequote}))\n  AND p.created_at >= '${__from:date:iso}'::timestamptz AND p.created_at <= '${__to:date:iso}'::timestamptz\nORDER BY p.posted_at DESC\nLIMIT 500",
           "refId": "A"
         }
       ],
@@ -825,13 +828,37 @@
         "x": 0,
         "y": 37
       },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "hits"},
+            "properties": [
+              {"id": "custom.width", "value": 80},
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {"color": "blue", "value": null},
+                    {"color": "orange", "value": 3},
+                    {"color": "red", "value": 10}
+                  ]
+                }
+              },
+              {"id": "custom.displayMode", "value": "color-background"}
+            ]
+          }
+        ]
+      },
       "id": 40,
       "options": {
-        "legend": {
-          "displayMode": "hidden"
-        },
-        "orientation": "horizontal"
+        "cellHeight": "sm",
+        "footer": {"show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "hits"}]
       },
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -841,12 +868,12 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT kw AS keyword, COUNT(*) AS hits\nFROM analysis_results, UNNEST(matched_keywords) AS kw\nGROUP BY kw ORDER BY hits DESC LIMIT 20",
+          "rawSql": "SELECT kw AS keyword, COUNT(*) AS hits\nFROM analysis_results ar\nJOIN posts p ON p.id = ar.post_id\nJOIN targets t ON t.id = p.target_id\nCROSS JOIN LATERAL UNNEST(ar.matched_keywords) AS kw\nWHERE t.facebook_id IN (${target:singlequote})\n  AND p.post_type::text IN (${post_type:singlequote})\n  AND p.created_at >= '${__from:date:iso}'::timestamptz\n  AND p.created_at <= '${__to:date:iso}'::timestamptz\nGROUP BY kw ORDER BY hits DESC LIMIT 20",
           "refId": "A"
         }
       ],
       "title": "Top Keywords Matched (all time)",
-      "type": "barchart"
+      "type": "table"
     },
     {
       "datasource": {
@@ -917,7 +944,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "risk_score"
+            "displayName": "keyword_matches"
           }
         ]
       },
@@ -930,7 +957,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(name, SUBSTRING(facebook_id, 1, 30)) AS name,\n  ROUND(risk_score::numeric, 3) AS risk_score,\n  flagged_posts_count AS flagged,\n  total_posts_analyzed AS analyzed,\n  CASE WHEN total_posts_analyzed > 0\n    THEN ROUND(100.0 * flagged_posts_count / total_posts_analyzed, 1)\n    ELSE 0 END AS flag_pct,\n  status::text AS status,\n  facebook_id\nFROM profiles\nWHERE total_posts_analyzed > 0\nORDER BY risk_score DESC, flagged_posts_count DESC\nLIMIT 30",
+          "rawSql": "SELECT\n  COALESCE(pr.name, SUBSTRING(pr.facebook_id, 1, 30)) AS name,\n  ROUND(pr.risk_score::numeric, 3) AS risk_score,\n  COUNT(p.id) FILTER (WHERE ar.overall_label != 'CLEAN') AS keyword_matches,\n  COUNT(p.id) FILTER (WHERE p.status = 'FLAGGED') AS high_severity,\n  COUNT(p.id) FILTER (WHERE p.status = 'CLEARED') AS cleared,\n  COUNT(p.id) AS analyzed,\n  pr.facebook_id\nFROM profiles pr\nJOIN posts p ON p.author_id = pr.id\nLEFT JOIN analysis_results ar ON ar.post_id = p.id\nJOIN targets t ON t.id = p.target_id\nWHERE t.facebook_id IN (${target:singlequote})\n  AND p.post_type::text IN (${post_type:singlequote})\n  AND p.created_at >= '${__from:date:iso}'::timestamptz\n  AND p.created_at <= '${__to:date:iso}'::timestamptz\nGROUP BY pr.id\nHAVING COUNT(p.id) FILTER (WHERE ar.overall_label != 'CLEAN') > 0\nORDER BY keyword_matches DESC, risk_score DESC\nLIMIT 100",
           "refId": "A"
         }
       ],
@@ -946,11 +973,10 @@
   "templating": {
     "list": [
       {
-        "allValue": ".*",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "All",
-          "value": "$__all"
+          "value": ["$__all"]
         },
         "datasource": {
           "type": "postgres",
@@ -960,7 +986,7 @@
         "hide": 0,
         "includeAll": true,
         "label": "Target Page",
-        "multi": false,
+        "multi": true,
         "name": "target",
         "query": "SELECT name AS __text, facebook_id AS __value FROM targets WHERE is_active = true ORDER BY name",
         "refresh": 1,
@@ -971,15 +997,20 @@
       },
       {
         "current": {
+          "selected": true,
           "text": "All",
-          "value": "ALL"
+          "value": ["$__all"]
         },
         "hide": 0,
-        "includeAll": false,
+        "includeAll": true,
         "label": "Type",
-        "multi": false,
+        "multi": true,
         "name": "post_type",
-        "query": "All : ALL, Post : POST, Comment : COMMENT",
+        "options": [
+          {"selected": false, "text": "Post", "value": "POST"},
+          {"selected": false, "text": "Comment", "value": "COMMENT"}
+        ],
+        "query": "Post : POST, Comment : COMMENT",
         "skipUrlSync": false,
         "type": "custom"
       }

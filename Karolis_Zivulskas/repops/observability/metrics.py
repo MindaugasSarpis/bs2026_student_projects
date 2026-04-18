@@ -78,17 +78,6 @@ queue_depth = Gauge(
     ["queue_name"],
 )
 
-# Reporting
-reports_submitted_total = Counter(
-    "repops_reports_submitted_total",
-    "Reports submitted to Meta",
-    ["outcome"],  # success | failed | skipped
-)
-reports_pending_gauge = Gauge(
-    "repops_reports_pending",
-    "Reports currently queued but not yet submitted",
-)
-
 # Startup helper
 _metrics_server_started = False
 

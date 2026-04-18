@@ -13,7 +13,7 @@ import math
 from sqlalchemy import func, select
 
 from repops.db import get_session
-from repops.models import AnalysisResult, AnalysisLabel, Post, Profile
+from repops.models import AnalysisLabel, AnalysisResult, Post, Profile
 from repops.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -36,7 +36,12 @@ def compute_risk_score(
     if total_posts == 0:
         return 0.0
 
-    flag_rate = flagged_posts / total_posts
+    # Confidence factor: shrink flag_rate toward 0 for profiles with few posts.
+    # A single bad post out of 1 total should not equal a 100% flag rate.
+    # Approaches 1.0 as total_posts grows (reaches ~0.9 at 10 posts, ~0.99 at 100).
+    confidence = total_posts / (total_posts + 5)
+
+    flag_rate = (flagged_posts / total_posts) * confidence
     volume_bonus = math.log1p(flagged_posts) / math.log1p(100)  # capped at 100
     severity_signal = (top_keyword_severity / 3.0) if top_keyword_severity else 0.0
 
@@ -62,23 +67,23 @@ def recalculate_profile(profile_id: object) -> float:
             select(func.count(Post.id)).where(Post.author_id == profile.id)
         ) or 0
 
-        # Flagged posts
+        # Flagged posts (any post with a keyword match, regardless of severity)
         flagged = session.scalar(
             select(func.count(AnalysisResult.id))
             .join(Post, Post.id == AnalysisResult.post_id)
             .where(
                 Post.author_id == profile.id,
-                AnalysisResult.overall_label == AnalysisLabel.HATE_SPEECH,
+                AnalysisResult.overall_label != AnalysisLabel.CLEAN,
             )
         ) or 0
 
-        # Average score on flagged posts
+        # Average score on keyword-matched posts
         avg_score = session.scalar(
             select(func.avg(AnalysisResult.overall_score))
             .join(Post, Post.id == AnalysisResult.post_id)
             .where(
                 Post.author_id == profile.id,
-                AnalysisResult.overall_label == AnalysisLabel.HATE_SPEECH,
+                AnalysisResult.overall_label != AnalysisLabel.CLEAN,
             )
         ) or 0.0
 

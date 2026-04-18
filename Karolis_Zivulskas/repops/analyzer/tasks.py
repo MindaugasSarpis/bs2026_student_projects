@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from datetime import datetime, timezone
 
 from celery import shared_task
 from sqlalchemy import select
@@ -34,9 +35,9 @@ logger = get_logger(__name__)
 
 # Keyword severity → risk score
 _SEVERITY_SCORE: dict[int, float] = {
-    1: 0.35,   # low   — stored, not auto-flagged
-    2: 0.65,   # medium — flagged for human review
-    3: 0.95,   # high  — auto-submitted to Meta
+    1: 0.35,   # low
+    2: 0.65,   # medium
+    3: 0.95,   # high
 }
 
 
@@ -73,6 +74,15 @@ def analyze_post(self: object, facebook_id: str) -> dict:  # type: ignore[type-a
             kw_matches += keyword_matcher.match_text_regex(post.content, regex_patterns)
 
         matched_kws = list({m.pattern for m in kw_matches})  # deduplicate
+
+        # Stamp last_matched_at on every entry that fired
+        if matched_kws:
+            entry_by_pattern = {e.pattern: e for e in keyword_entries}
+            now = datetime.now(timezone.utc)
+            for pattern in matched_kws:
+                entry = entry_by_pattern.get(pattern)
+                if entry:
+                    entry.last_matched_at = now
         kw_severity = keyword_matcher.top_severity(kw_matches)
 
         # Score and label
@@ -120,14 +130,6 @@ def analyze_post(self: object, facebook_id: str) -> dict:  # type: ignore[type-a
             label=overall_label,
             keywords_matched=len(matched_kws),
             duration_ms=round(duration * 1000),
-        )
-
-    # Auto-report to Meta if above threshold
-    if post.status == PostStatus.FLAGGED and overall_score >= settings.auto_report_threshold:
-        from repops.reporter.tasks import submit_report
-        submit_report.apply_async(
-            kwargs={"post_id": str(post.id)},
-            queue="reporting",
         )
 
     # Recalculate profile risk score if post has an author

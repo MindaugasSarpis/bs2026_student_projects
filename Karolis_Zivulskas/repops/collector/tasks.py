@@ -94,8 +94,9 @@ def collect_target(self: object, target_id: str) -> dict:  # type: ignore[type-a
 
 
 async def _scrape(fb_page_id: str) -> list[ScrapedPost]:
+    from repops.settings import settings
     async with ApifyScraper() as scraper:
-        return await scraper.scrape_page(fb_page_id, max_posts=10)
+        return await scraper.scrape_page(fb_page_id, max_posts=settings.scraper_max_posts, max_comments=settings.scraper_max_comments)
 
 
 def _persist_posts(

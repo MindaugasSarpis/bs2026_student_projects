@@ -126,27 +126,7 @@ resource "aws_security_group" "app" {
 }
 
 # ---------------------------------------------------------------------------
-# S3 — Evidence storage
-# ---------------------------------------------------------------------------
-resource "aws_s3_bucket" "evidence" {
-  bucket = var.s3_evidence_bucket
-  tags   = local.common_tags
-}
-
-resource "aws_s3_bucket_versioning" "evidence" {
-  bucket = aws_s3_bucket.evidence.id
-  versioning_configuration { status = "Enabled" }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "evidence" {
-  bucket = aws_s3_bucket.evidence.id
-  rule {
-    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
-  }
-}
-
-# ---------------------------------------------------------------------------
-# IAM — EC2 instance role for S3 access
+# IAM — EC2 instance role
 # ---------------------------------------------------------------------------
 resource "aws_iam_role" "app" {
   name = "${local.name_prefix}-ec2-role"
@@ -159,22 +139,6 @@ resource "aws_iam_role" "app" {
     }]
   })
   tags = local.common_tags
-}
-
-resource "aws_iam_role_policy" "app_s3" {
-  name = "s3-evidence-access"
-  role = aws_iam_role.app.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
-      Resource = [
-        aws_s3_bucket.evidence.arn,
-        "${aws_s3_bucket.evidence.arn}/*"
-      ]
-    }]
-  })
 }
 
 resource "aws_iam_instance_profile" "app" {
@@ -196,7 +160,7 @@ resource "aws_instance" "app" {
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = 60 # Docker images + Postgres data + Elasticsearch + Prometheus TSDB
+    volume_size = 30 # Docker images + Postgres data + Prometheus TSDB
   }
 
   # Bootstrap: install Docker from official repo + git
