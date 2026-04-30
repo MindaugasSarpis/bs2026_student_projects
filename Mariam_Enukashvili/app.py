@@ -332,6 +332,51 @@ scatter_chart = alt.Chart(scatter_data).mark_circle(size=90, opacity=0.7).encode
 st.altair_chart(scatter_chart, use_container_width=True)
 
 # -----------------------------
+# Additional Charts
+# -----------------------------
+st.divider()
+
+st.subheader("Employees vs Annual Revenue")
+
+employee_revenue_data = filtered_df.dropna(
+    subset=["Number of Employees", "Annual Revenue ($M)"]
+)
+
+# LIMIT data → VERY IMPORTANT (prevents overcrowding)
+employee_revenue_data = employee_revenue_data.sample(
+    n=min(800, len(employee_revenue_data)),
+    random_state=1
+)
+
+chart = alt.Chart(employee_revenue_data).mark_circle(
+    size=70,
+    opacity=0.4
+).encode(
+    x=alt.X(
+        "Number of Employees:Q",
+        title="Number of Employees",
+        scale=alt.Scale(domain=[0, 5000])  # FIX AXIS
+    ),
+    y=alt.Y(
+        "Annual Revenue ($M):Q",
+        title="Annual Revenue ($M)",
+        scale=alt.Scale(domain=[0, 1000])  # FIX AXIS
+    ),
+    color=alt.Color("Industry:N"),
+    tooltip=[
+    "Startup Name",
+    "Country",
+    "Industry",
+    alt.Tooltip("Number of Employees:Q", title="Employees"),
+    alt.Tooltip("Annual Revenue ($M):Q", title="Revenue ($M)", format=".2f")
+]
+).properties(
+    height=400
+).interactive()
+
+st.altair_chart(chart, use_container_width=True)   
+
+# -----------------------------
 # Dynamic insight
 # -----------------------------
 top_industry = filtered_df["Industry"].value_counts().idxmax()
