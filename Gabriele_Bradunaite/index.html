@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e0e0e0; }
+        .hero { padding: 60px 40px 40px; text-align: center; border-bottom: 1px solid #ffffff10; }
+        .hero-tag { display: inline-block; background: #e9456020; border: 1px solid #e9456050; color: #e94560; padding: 5px 16px; border-radius: 50px; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+        .hero h1 { font-size: 42px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+        .hero p { color: #6b6b80; font-size: 15px; }
+        .nav { display: flex; justify-content: center; gap: 8px; padding: 24px 40px; border-bottom: 1px solid #ffffff10; flex-wrap: wrap; }
+        .nav button { background: #12121a; border: 1px solid #ffffff15; color: #6b6b80; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .nav button:hover { color: #fff; border-color: #ffffff30; }
+        .nav button.active { background: #e9456020; border-color: #e94560; color: #e94560; }
+        .content { max-width: 1000px; margin: 0 auto; padding: 50px 40px; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .panel-title { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #e94560; margin-bottom: 8px; }
+        .panel-heading { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .panel-desc { color: #6b6b80; font-size: 14px; line-height: 1.7; margin-bottom: 30px; max-width: 600px; }
+        .chart-box { background: #12121a; border: 1px solid #ffffff10; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .chart-box img { width: 100%; display: block; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+        .stat { background: #12121a; border: 1px solid #ffffff10; border-radius: 12px; padding: 24px; text-align: center; }
+        .stat .num { font-size: 36px; font-weight: 900; color: #4ade80; }
+        .stat .lbl { font-size: 11px; color: #6b6b80; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        footer { text-align: center; color: #2a2a3a; font-size: 12px; padding: 30px; border-top: 1px solid #ffffff08; }
+    </style>
+</head>
+<body>
+<div class="hero">
+    <div class="hero-tag">Data Analysis Project</div>
+    <h1>Portfolio Analysis</h1>
+    <p>533 investments analysed using Python — pandas & matplotlib</p>
+</div>
+<div class="nav">
+    <button class="active" onclick="show('overview', this)">Overview</button>
+    <button onclick="show('sectors', this)">Sectors</button>
+    <button onclick="show('prices', this)">Prices</button>
+    <button onclick="show('esg', this)">ESG Scores</button>
+    <button onclick="show('controversial', this)">Controversial</button>
+</div>
+<div class="content">
+    <div class="panel active" id="panel-overview">
+        <p class="panel-title">Summary</p>
+        <h2 class="panel-heading">Key Numbers</h2>
+        <p class="panel-desc">A high level overview of the portfolio. Click the tabs above to explore each analysis in detail.</p>
+        <div class="stats">
+            <div class="stat"><div class="num">533</div><div class="lbl">Total Investments</div></div>
+            <div class="stat"><div class="num">5.5</div><div class="lbl">Avg ESG Score</div></div>
+            <div class="stat"><div class="num">64</div><div class="lbl">Flagged Holdings</div></div>
+            <div class="stat"><div class="num">12</div><div class="lbl">Sectors</div></div>
+        </div>
+        <div class="chart-box"><img src="chart1_TOP10_Sectors.png"></div>
+    </div>
+    <div class="panel" id="panel-sectors">
+        <p class="panel-title">Breakdown</p>
+        <h2 class="panel-heading">Top 10 Sectors</h2>
+        <p class="panel-desc">Which industries are most represented in the portfolio? Consumer Discretionary leads with 83 holdings.</p>
+        <div class="chart-box"><img src="chart1_TOP10_Sectors.png"></div>
+    </div>
+    <div class="panel" id="panel-prices">
+        <p class="panel-title">Price Analysis</p>
+        <h2 class="panel-heading">Stock Prices</h2>
+        <p class="panel-desc">Booking Holdings is the most expensive stock at $2,010 per share. Health Care has the highest average price per sector.</p>
+        <div class="chart-box"><img src="chart4_Top10_Expensive.png"></div>
+        <div class="chart-box"><img src="chart5_Avg_stock_price.png"></div>
+    </div>
+    <div class="panel" id="panel-esg">
+        <p class="panel-title">Sustainability</p>
+        <h2 class="panel-heading">ESG Scores</h2>
+        <p class="panel-desc">ESG scores measure how ethical and sustainable a company is, on a scale from 1 to 10. The portfolio averages around 5.5 across all categories.</p>
+        <div class="chart-box"><img src="chart4_ESG.png"></div>
+    </div>
+    <div class="panel" id="panel-controversial">
+        <p class="panel-title">Risk Screening</p>
+        <h2 class="panel-heading">Controversial Holdings</h2>
+        <p class="panel-desc">64 companies (12% of the portfolio) are flagged for tobacco, alcohol, gambling, military, or fossil fuels.</p>
+        <div class="chart-box"><img src="chart2_Controversial_Holdings.png"></div>
+    </div>
+</div>
+<footer>Data Analysis and Artificial Intelligence &mdash; Dr. Mindaugas Sarpis &mdash; 2026</footer>
+<script>
+function show(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
