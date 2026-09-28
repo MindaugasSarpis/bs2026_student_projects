@@ -59,35 +59,31 @@ def get_shared_styles() -> str:
 
 
 def apply_branding() -> None:
-    """
-    Applies shared branding, CSS, and sidebar elements in a single pass
-    to reduce visual flickering during page transitions.
-    """
-    # 1. Inject CSS early
+    """Injects shared CSS. Call once at the top of each page."""
     st.markdown(get_shared_styles(), unsafe_allow_html=True)
 
-    # 2. Setup Sidebar
+
+def render_sidebar_footer() -> None:
+    """
+    Renders logo, system status, and footer in the sidebar.
+    Call at the END of each page so page controls appear above these elements.
+    """
+    root_dir = Path(__file__).parent.parent
+    logo_path = root_dir / "assets" / "logo.png"
+
     with st.sidebar:
-        # Resolve logo path relative to the root of the project
-        root_dir = Path(__file__).parent.parent
-        logo_path = root_dir / "assets" / "logo.png"
+        st.markdown("---")
 
         if logo_path.exists():
             st.image(str(logo_path), width='stretch')
         else:
             st.title("⚛️ CERN Explorer")
 
-        st.markdown("---")
-
-        # System Status
         st.caption("🛰️ System Status: **Optimal**")
         st.caption("📦 Cache Health: **Ready**")
 
-        st.markdown("---")
-
-        # Footer
         st.markdown("""
-            <div style='text-align: center; opacity: 0.7; font-size: 0.8em;'>
+            <div style='text-align: center; opacity: 0.7; font-size: 0.8em; margin-top: 0.5rem;'>
                 🚀 Developed by <br>
                 <a href='https://github.com/VytasMule' target='_blank' style='color: #00d4ff; text-decoration: none; font-weight: 800;'>Vytas Mulevicius</a> <br>
                 <p style='margin-top: 5px;'>© 2026 CERN Open Data </p>

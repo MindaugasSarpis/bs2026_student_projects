@@ -57,14 +57,14 @@ def render_3d_animation(filtered_df: pd.DataFrame, particle_name: str) -> None:
     frames = [
         go.Frame(
             data=[
-                go.Scatter3d(x=[0, ev['px1']], y=[0, ev['py1']], z=[0, ev['pz1']]),
-                go.Scatter3d(x=[0, ev['px2']], y=[0, ev['py2']], z=[0, ev['pz2']]),
-                go.Scatter3d(x=[0, ev['parent_px']], y=[0, ev['parent_py']], z=[0, ev['parent_pz']]),
+                go.Scatter3d(x=[0, ev.px1], y=[0, ev.py1], z=[0, ev.pz1]),
+                go.Scatter3d(x=[0, ev.px2], y=[0, ev.py2], z=[0, ev.pz2]),
+                go.Scatter3d(x=[0, ev.parent_px], y=[0, ev.parent_py], z=[0, ev.parent_pz]),
             ],
             traces=[1, 2, 3],
             name=f"frame{i}",
         )
-        for i, (_, ev) in enumerate(subset_df.iterrows())
+        for i, ev in enumerate(subset_df.itertuples(index=False))
     ]
     fig_anim.frames = frames
 

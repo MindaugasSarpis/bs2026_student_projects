@@ -1,3 +1,4 @@
+from functools import reduce
 import polars as pl
 
 
@@ -32,7 +33,4 @@ def apply_kinematic_filters(
     if require_opposite_charge and 'Q1' in cols and 'Q2' in cols:
         filter_exprs.append(pl.col('Q1') != pl.col('Q2'))
 
-    for expr in filter_exprs:
-        df = df.filter(expr)
-
-    return df
+    return df.filter(reduce(lambda a, b: a & b, filter_exprs))
