@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OSRS GE Tracker — Presentation</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<style>
+  @font-face {
+    font-family: 'RuneScape';
+    src: url('/fonts/runescape.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  :root {
+    --gold: #ff981f;
+    --gold-bright: #ffcc44;
+    --brown-dark: #2b1a0e;
+    --brown-mid: #3d2410;
+    --brown-light: #5c3317;
+    --border: #6b4c2a;
+    --border-bright: #c8982a;
+    --text: #e8d48a;
+    --text-dim: #a08050;
+    --green: #00cc44;
+    --red: #cc2200;
+    --bg: #1a1008;
+  }
+
+  html, body {
+    background:
+      radial-gradient(ellipse at center, #140a04 0%, #080402 100%);
+  }
+  .reveal-viewport { background: transparent !important; }
+
+  .reveal {
+    font-family: 'RuneScape', serif;
+    color: var(--text);
+    font-size: 30px;
+  }
+
+  .reveal .slides { text-align: left; }
+
+  .reveal h1, .reveal h2, .reveal h3 {
+    font-family: 'RuneScape', serif;
+    color: var(--gold-bright);
+    text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255,204,68,0.35);
+    text-transform: none;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+
+  .reveal h1 { font-size: 2.4em; }
+  .reveal h2 { font-size: 1.6em; }
+  .reveal h3 { font-size: 1.15em; color: var(--gold); }
+
+  .reveal p, .reveal li { color: var(--text); line-height: 1.5; }
+
+  .reveal a { color: var(--gold-bright); }
+
+  .reveal ul { list-style: none; padding-left: 0; }
+  .reveal ul li { padding-left: 1.4em; position: relative; margin-bottom: 10px; }
+  .reveal ul li::before {
+    content: "⚔";
+    color: var(--gold);
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .reveal section {
+    background:
+      radial-gradient(ellipse at top, rgba(255,153,31,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #1a1008 0%, #0d0804 100%);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 36px 52px !important;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+  }
+
+  .reveal code, .reveal pre {
+    font-family: 'Courier New', monospace;
+    background: var(--brown-dark);
+    color: var(--gold-bright);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+  }
+
+  .reveal pre {
+    padding: 10px 14px;
+    display: block;
+    line-height: 1.4;
+  }
+
+  .reveal strong { color: var(--gold-bright); }
+  .reveal em { color: var(--gold); font-style: normal; }
+
+  /* Title slide */
+  .title-slide {
+    text-align: center !important;
+  }
+  .title-slide h1 {
+    font-size: 3em;
+    margin-bottom: 12px;
+  }
+  .title-slide .subtitle {
+    font-size: 1.1em;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+  }
+  .title-slide .coins {
+    font-size: 4em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 30px rgba(255,204,68,0.6);
+    margin: 20px 0;
+  }
+
+  /* Icon rows */
+  .icon-row {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    align-items: center;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .icon-row img {
+    width: 64px;
+    height: 64px;
+    image-rendering: pixelated;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8));
+  }
+  .icon-row .label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .icon-row .label span {
+    font-size: 0.65em;
+    color: var(--text-dim);
+  }
+
+  /* Callout box */
+  .callout {
+    border: 2px solid var(--border-bright);
+    background: rgba(255,153,31,0.06);
+    border-radius: 6px;
+    padding: 16px 22px;
+    margin: 18px 0;
+    font-size: 0.95em;
+  }
+  .callout.red {
+    border-color: #883322;
+    background: rgba(204,34,0,0.08);
+  }
+  .callout.green {
+    border-color: #2a7a3a;
+    background: rgba(0,204,68,0.06);
+  }
+
+  /* Two-column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+  }
+
+  /* Feature grid */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .feature {
+    border: 1px solid var(--border);
+    background: var(--brown-dark);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .feature img {
+    width: 42px; height: 42px;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+  }
+  .feature .f-title {
+    color: var(--gold-bright);
+    font-size: 1em;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .feature .f-desc {
+    color: var(--text);
+    font-size: 0.8em;
+    line-height: 1.4;
+  }
+
+  /* Footer */
+  .reveal .controls { color: var(--gold); }
+  .reveal .progress { color: var(--gold); background: rgba(0,0,0,0.5); }
+
+  .slide-footer {
+    position: absolute;
+    bottom: 14px;
+    right: 20px;
+    font-size: 0.5em;
+    color: var(--text-dim);
+  }
+
+  /* Big gold number */
+  .big-gold {
+    font-size: 2.2em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 20px rgba(255,204,68,0.5);
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  /* Chart price up/down */
+  .price-up { color: var(--green); }
+  .price-down { color: var(--red); }
+
+  /* Demo slide */
+  .demo-slide {
+    text-align: center !important;
+  }
+  .demo-slide h1 {
+    font-size: 4em;
+    margin: 40px 0 20px;
+  }
+  .demo-slide .tagline {
+    font-size: 1.2em;
+    color: var(--text-dim);
+  }
+
+  /* Section divider */
+  hr.gold {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  /* Price tag */
+  .price-tag {
+    display: inline-block;
+    background: var(--brown-dark);
+    border: 1px solid var(--border-bright);
+    padding: 3px 10px;
+    border-radius: 4px;
+    color: var(--gold-bright);
+    font-size: 0.85em;
+  }
+
+  /* Flip example table */
+  table.flip {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 0.78em;
+  }
+  table.flip th, table.flip td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+  table.flip th {
+    background: var(--brown-mid);
+    color: var(--gold-bright);
+  }
+  table.flip td { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="reveal">
+<div class="slides">
+
+<!-- 1. Title -->
+<section class="title-slide">
+  <div class="coins">⚔ 💰 ⚔</div>
+  <h1>OSRS GE Tracker</h1>
+  <div class="subtitle">Visualizing Old School RuneScape market data</div>
+  <div class="icon-row">
+    <img src="/images/Blue partyhat.png" alt="">
+    <img src="/images/Twisted bow.png" alt="">
+    <img src="/images/Dragon claws.png" alt="">
+    <img src="/images/Abyssal whip.png" alt="">
+    <img src="/images/Old school bond.png" alt="">
+  </div>
+  <p style="text-align:center; margin-top:30px; color: var(--text-dim); font-size: 0.85em;">
+    Tomas Kondrotas · BS2026 Data Analysis · April 2026
+  </p>
+</section>
+
+<!-- 2. What is OSRS -->
+<section>
+  <h2>What is OSRS?</h2>
+  <div class="two-col">
+    <div>
+      <p><strong>Old School RuneScape</strong> is a MMORPG released in 2013 — a restored 2007 snapshot of the original RuneScape.</p>
+      <ul>
+        <li>Point-and-click fantasy MMO</li>
+        <li>Active playerbase of <strong>150,000+</strong> concurrent users</li>
+        <li>Skill-based progression across 23 skills</li>
+        <li>In-game currency: <em>gold pieces (gp)</em></li>
+        <li>Has its own economy, driven entirely by players</li>
+      </ul>
+    </div>
+    <div class="icon-row" style="flex-direction:column;">
+      <img src="/images/Twisted bow.png" alt="" style="width:96px; height:96px;">
+      <img src="/images/Scythe of vitur (uncharged).png" alt="" style="width:96px; height:96px;">
+      <img src="/images/Dragon claws.png" alt="" style="width:96px; height:96px;">
+    </div>
+  </div>
+</section>
+
+<!-- 3. What is Grand Exchange -->
+<section>
+  <h2>The Grand Exchange</h2>
+  <p>The <strong>Grand Exchange (GE)</strong> is OSRS's central player-driven marketplace — the equivalent of a stock exchange for virtual goods.</p>
+  <ul>
+    <li>~4,500 tradeable items, from <em>runes</em> to <em>rare weapons</em></li>
+    <li>Players place <strong>buy</strong> and <strong>sell</strong> offers at their chosen price</li>
+    <li>Matching engine pairs offers — just like a real order book</li>
+    <li>4-hour <strong>buy limits</strong> per item prevent market manipulation</li>
+    <li>Prices fluctuate based purely on <strong>supply &amp; demand</strong></li>
+  </ul>
+  <div class="icon-row">
+    <div class="label"><img src="/images/Nature rune.png" alt=""><span>Nature rune<br>~100 gp</span></div>
+    <div class="label"><img src="/images/Abyssal whip.png" alt=""><span>Abyssal whip<br>~1.5M gp</span></div>
+    <div class="label"><img src="/images/Twisted bow.png" alt=""><span>Twisted bow<br>~1.8B gp</span></div>
+  </div>
+</section>
+
+<!-- 4. Real world parallel - Partyhat crash -->
+<section>
+  <h2>Just like a real market</h2>
+  <div class="two-col">
+    <div>
+      <p>The GE behaves like a real market: <strong>booms, crashes, hype cycles, and bubbles</strong>.</p>
+      <h3 style="margin-top: 18px;">Famous example: the Partyhat saga</h3>
+      <ul>
+        <li>Dropped during a 2001 Christmas event</li>
+        <li>No longer obtainable — pure scarcity play</li>
+        <li>Peaked at ~<strong>2.1 billion gp</strong> (the GE coin cap)</li>
+        <li>Crashed hard in 2018–2019 after duping scandals and bond inflation</li>
+        <li>Behaved exactly like a <em>speculative collectible</em> — think tulips or NFTs</li>
+      </ul>
+    </div>
+    <div style="text-align:center;">
+      <img src="/images/Blue partyhat.png" alt="" style="width:140px; height:140px; image-rendering: pixelated; filter: drop-shadow(0 0 30px rgba(255,204,68,0.5));">
+      <div class="big-gold" style="font-size: 1.4em; margin-top: 14px;">📈 2.1B gp</div>
+      <div style="color: var(--text-dim); font-size: 0.75em;">then ↘ a billion overnight</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. The project -->
+<section>
+  <h2>The Project</h2>
+  <p>A web app that <strong>visualizes Grand Exchange market data</strong> — making patterns that are invisible in the game client immediately readable.</p>
+  <div class="feature-grid">
+    <div class="feature">
+      <img src="/images/Old school bond.png" alt="">
+      <div><span class="f-title">Browse</span>
+      <div class="f-desc">Search all ~4,500 tradeable items with sprites.</div></div>
+    </div>
+    <div class="feature">
+      <img src="/images/Nature rune.png" alt="">
+      <div><span class="f-title">High Alch</span>
+      <div class="f-desc">Profit calculator for the high-alchemy spell.</div></div>
+    </div>
+    <div class="feature">
+      <img src="/images/Abyssal whip.png" alt="">
+      <div><span class="f-title">Flip Picks</span>
+      <div class="f-desc">Top 10 flip opportunities ranked live.</div></div>
+    </div>
+    <div class="feature">
+      <img src="/images/Twisted bow.png" alt="">
+      <div><span class="f-title">Item Detail</span>
+      <div class="f-desc">Price history charts up to 1 year back.</div></div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:18px;">
+    <strong>Stack:</strong> Python · Flask · vanilla JS · Chart.js
+  </div>
+</section>
+
+<!-- 6. OSRS Wiki API -->
+<section>
+  <h2>The OSRS Wiki Prices API</h2>
+  <p>Community-run, free, no auth required — the gold standard for GE data.</p>
+  <pre>GET https://prices.runescape.wiki/api/v1/osrs/<em>endpoint</em></pre>
+  <ul>
+    <li><code>/mapping</code> — all tradeable items (name, icon, buy limit, alch value)</li>
+    <li><code>/latest</code> — current instant buy/sell prices</li>
+    <li><code>/5m</code>, <code>/1h</code> — rolling averages and trade volumes</li>
+    <li><code>/timeseries</code> — historical prices (5m / 1h / 6h / 24h, up to 1 year)</li>
+  </ul>
+  <div class="callout green">
+    Mapping is cached locally for 24 hours (<code>mapping_cache.json</code>) — so we don't hammer the wiki on every page load.
+  </div>
+</section>
+
+<!-- 7. Scraping icons -->
+<section>
+  <h2>Step 1: Scraping the icons</h2>
+  <p>The API gives item <em>names</em>, but not sprites. The icons live on the OSRS Wiki as PNG files.</p>
+  <ul>
+    <li>One-time script: <code>scrape_osrs_icons.py</code></li>
+    <li>Downloads <strong>~4,500 PNGs</strong> from <code>oldschool.runescape.wiki/images/</code></li>
+    <li>Tries the <code>_detail</code> variant first, falls back to plain name on 404</li>
+    <li>Throttles with <code>time.sleep(0.1)</code> — be polite to the wiki 🙏</li>
+  </ul>
+  <div class="icon-row">
+    <img src="/images/Dragon claws.png" alt="">
+    <img src="/images/Scythe of vitur (uncharged).png" alt="">
+    <img src="/images/Abyssal whip.png" alt="">
+    <img src="/images/Twisted bow.png" alt="">
+    <img src="/images/Blue partyhat.png" alt="">
+    <img src="/images/Nature rune.png" alt="">
+    <img src="/images/Old school bond.png" alt="">
+  </div>
+  <div class="callout">
+    Icons are served as static files by Flask. Not checked into git (<code>.gitignore</code>) — users run the scraper on first setup.
+  </div>
+</section>
+
+<!-- 8. General functionality -->
+<section>
+  <h2>General Functionality</h2>
+  <div class="two-col">
+    <div>
+      <h3>Browse</h3>
+      <ul>
+        <li>Grid of all ~4,500 items</li>
+        <li>Debounced live search</li>
+        <li>Click → item detail page</li>
+      </ul>
+      <h3>Item Detail</h3>
+      <ul>
+        <li>Live buy/sell prices</li>
+        <li>5m &amp; 1h rolling averages</li>
+        <li>Interactive Chart.js price chart</li>
+        <li>Switch between 5m / 1h / 6h / 24h</li>
+      </ul>
+    </div>
+    <div style="text-align:center;">
+      <div style="background: var(--brown-dark); border: 1px solid var(--border-bright); border-radius: 6px; padding: 20px;">
+        <img src="/images/Twisted bow.png" alt="" style="width:72px;">
+        <div style="color: var(--gold-bright); font-size: 1.1em; margin-top: 8px;">Twisted bow</div>
+        <hr class="gold">
+        <div>Buy: <span class="price-tag">1.78B</span></div>
+        <div>Sell: <span class="price-tag">1.81B</span></div>
+        <div style="margin-top:8px;" class="price-up">▲ +2.1% (24h)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Alchemy page -->
+<section>
+  <h2>The Alchemy Page</h2>
+  <p><em>High Alchemy</em> is a magic spell that converts an item into coins at a fixed value — one of the game's oldest money-makers.</p>
+  <ul>
+    <li>Every item has a built-in <strong>high-alch value</strong> (comes from the mapping)</li>
+    <li>If <code>buy_price + nature_rune_cost &lt; alch_value</code>, you profit per cast</li>
+    <li>The page shows every item as a sortable table:
+      <br>&nbsp;&nbsp;buy price · alch value · profit/loss</li>
+    <li><span class="price-up">Green rows</span> = profitable · <span class="price-down">red rows</span> = loss</li>
+  </ul>
+  <table class="flip">
+    <tr><th>Item</th><th>Buy</th><th>Alch value</th><th>Profit</th></tr>
+    <tr><td>Yew longbow</td><td>320 gp</td><td>768 gp</td><td class="price-up">+280 gp</td></tr>
+    <tr><td>Adamant platebody</td><td>3,800 gp</td><td>3,888 gp</td><td class="price-down">−80 gp</td></tr>
+  </table>
+</section>
+
+<!-- 10. Flipping -->
+<section>
+  <h2>Flipping &amp; the Flip Picks page</h2>
+  <p><strong>Flipping</strong> = buying low, selling high on the GE — pocketing the spread between instant-buy and instant-sell prices.</p>
+  <h3>What the page shows</h3>
+  <ul>
+    <li>Top 10 items ranked by a composite score</li>
+    <li><code>score = margin % × log(volume) × log(max_profit)</code></li>
+    <li>Rewards <em>margin</em>, <em>liquidity</em>, and <em>profit ceiling</em> (margin × 4h buy limit)</li>
+    <li>Filters out noise: margin &ge; 1%, buy &ge; 100 gp, volume &ge; 10/h</li>
+  </ul>
+  <div class="callout red">
+    <strong>Reality check:</strong> I made a handful of flips for ~<strong>9,000 gp</strong>. Bots and faster players take the best spreads in seconds — as a manual tool it's useful for learning the market, but <strong>unreliable as income</strong>. Would need full automation to actually be profitable.
+  </div>
+</section>
+
+<!-- 11. Demo -->
+<section class="demo-slide">
+  <div class="coins" style="font-size: 5em; color: var(--gold-bright); text-shadow: 0 0 40px rgba(255,204,68,0.8);">💰</div>
+  <h1>Demo</h1>
+  <div class="tagline">Let's open the app</div>
+  <div class="icon-row" style="margin-top: 40px;">
+    <img src="/images/Old school bond.png" alt="">
+    <img src="/images/Twisted bow.png" alt="">
+    <img src="/images/Dragon claws.png" alt="">
+    <img src="/images/Abyssal whip.png" alt="">
+    <img src="/images/Blue partyhat.png" alt="">
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    transition: 'slide',
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1280,
+    height: 800,
+    margin: 0.05,
+  });
+</script>
+</body>
+</html>
