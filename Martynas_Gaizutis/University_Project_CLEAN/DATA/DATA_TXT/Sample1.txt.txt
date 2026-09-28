@@ -1,0 +1,2 @@
+This is a sample document for testing.
+It contains several lines of text.

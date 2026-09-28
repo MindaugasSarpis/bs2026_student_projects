@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag3"
+version = "0.1.0"
+description = "Mac-ready retrieval augmented generation pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "openai>=1.0.0",
+  "haystack-ai>=2.0.0",
+  "elasticsearch-haystack",
+  "elasticsearch>=8.0.0",
+  "sentence-transformers>=2.2.0",
+  "python-docx>=1.1.0",
+  "pandas>=2.0.0",
+  "openpyxl>=3.1.0",
+  "pypdf>=4.0.0",
+  "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+ui = [
+  "streamlit>=1.30.0",
+]
+all = [
+  "streamlit>=1.30.0",
+]
+
+[project.scripts]
+rag3 = "rag3.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
