@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BS2026 Project Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: left-aligned catalogue header, sticky filter bar, image-led card grid, detail sheet in a dialog. */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --sunk:#e3e9e7; --ink:#12211f; --muted:#566765; --line:#d2dbd9;
+  --accent:#0b6e6e; --accent-ink:#ffffff; --accent-soft:#d8ecea;
+  --ok:#1d7a4c; --ok-bg:#dcf1e5; --warn:#8a5a00; --warn-bg:#fbebc8; --unk:#4d5b6e; --unk-bg:#e1e6ee;
+  --shadow:0 1px 2px rgba(18,33,31,.06),0 8px 24px -12px rgba(18,33,31,.18);
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1615; --surface:#15211f; --sunk:#0a1110; --ink:#e5efed; --muted:#93a6a3; --line:#263633;
+  --accent:#55c8c0; --accent-ink:#06201e; --accent-soft:#173532;
+  --ok:#6fd6a0; --ok-bg:#12351f; --warn:#f0c264; --warn-bg:#3a2c08; --unk:#a9b8cf; --unk-bg:#1f2937;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -12px rgba(0,0,0,.7);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1615; --surface:#15211f; --sunk:#0a1110; --ink:#e5efed; --muted:#93a6a3; --line:#263633;
+  --accent:#55c8c0; --accent-ink:#06201e; --accent-soft:#173532;
+  --ok:#6fd6a0; --ok-bg:#12351f; --warn:#f0c264; --warn-bg:#3a2c08; --unk:#a9b8cf; --unk-bg:#1f2937;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -12px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--body)}
+img,video{max-width:100%;display:block}
+button,input{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:clamp(16px,4vw,40px)}
+
+header.top{padding-block:clamp(28px,5vw,56px) 24px;display:grid;gap:24px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(2.2rem,6vw,4rem)/1 var(--display);letter-spacing:-.02em;margin:10px 0 0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{max-width:62ch;color:var(--muted);margin:14px 0 0;font-size:1.05rem}
+.head-row{display:flex;flex-wrap:wrap;gap:24px;align-items:end;justify-content:space-between}
+.tally{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.tally div{padding:12px 20px;border-right:1px solid var(--line);min-width:96px}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font:700 1.7rem/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tally span{font-size:.8rem;color:var(--muted)}
+
+.bar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-block:1px solid var(--line)}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding-block:12px}
+.search{flex:1 1 220px;min-width:0;max-width:340px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:6px 13px;border-radius:999px;font-size:.87rem;font-weight:500;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.theme{margin-left:auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:.87rem;cursor:pointer}
+
+main{padding-block:28px 56px}
+.count{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:22px}
+.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);text-align:left;padding:0;cursor:pointer;transition:transform .18s ease,border-color .18s ease;min-width:0}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.thumb{position:relative;aspect-ratio:16/10;background:var(--sunk);overflow:hidden;border-bottom:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;object-position:top left}
+.thumb.contain{background:#fff}
+.thumb.contain img{object-fit:contain;object-position:center}
+.ph{position:absolute;inset:0;display:grid;place-items:center;padding:20px;font:700 1.5rem/1.1 var(--display);color:var(--accent);text-align:center;
+  background:repeating-linear-gradient(135deg,var(--accent-soft) 0 14px,transparent 14px 28px)}
+.play{position:absolute;right:10px;bottom:10px;font:500 11px/1 var(--mono);background:rgba(10,20,19,.78);color:#fff;padding:6px 9px;border-radius:999px}
+.body{display:flex;flex-direction:column;gap:10px;padding:16px 18px 18px;flex:1;min-width:0}
+.meta{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.group{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pill{font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:6px}
+.pill.works{color:var(--ok);background:var(--ok-bg)}
+.pill.partial{color:var(--warn);background:var(--warn-bg)}
+.pill.unverified{color:var(--unk);background:var(--unk-bg)}
+.card h2{font:700 1.25rem/1.15 var(--display);margin:0;text-wrap:balance;overflow-wrap:anywhere}
+.author{color:var(--muted);font-size:.9rem;margin:-4px 0 0}
+.blurb{margin:0;font-size:.93rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;padding-top:4px}
+.tag{font:400 11.5px/1 var(--mono);padding:5px 8px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.empty{padding:48px 0;color:var(--muted)}
+
+dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var(--ink);width:min(1040px,calc(100vw - 24px));max-height:calc(100vh - 24px);box-shadow:0 30px 80px -20px rgba(0,0,0,.55)}
+dialog::backdrop{background:rgba(8,16,15,.62);backdrop-filter:blur(3px)}
+.sheet{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.stage{background:var(--sunk);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.view{background:#fff;border-radius:12px;overflow:hidden;display:grid;place-items:center;min-height:200px}
+.view img{max-height:62vh;width:auto}
+.view video{width:100%;max-height:62vh;background:#000}
+.strip{display:flex;gap:8px;flex-wrap:wrap}
+.strip button{border:2px solid transparent;border-radius:9px;padding:0;overflow:hidden;width:76px;height:52px;background:#fff;cursor:pointer;position:relative}
+.strip button[aria-current="true"]{border-color:var(--accent)}
+.strip img{width:100%;height:100%;object-fit:cover}
+.strip .vid{display:grid;place-items:center;width:100%;height:100%;background:#0a1413;color:#fff;font:500 11px var(--mono)}
+.info{padding:26px 28px 28px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow-wrap:anywhere}
+.info h2{font:700 1.9rem/1.08 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.info p{margin:0}
+.info h3{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.caveat{border-left:3px solid var(--warn);background:var(--warn-bg);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.9rem}
+.cmd{display:flex;gap:8px;align-items:flex-start;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.cmd code{font:400 12.5px/1.5 var(--mono);flex:1;min-width:0;white-space:pre-wrap}
+.cmd button{border:1px solid var(--line);background:var(--surface);border-radius:7px;font-size:.78rem;padding:4px 9px;cursor:pointer;flex:none}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{text-decoration:none;font-weight:600;font-size:.9rem;padding:8px 14px;border-radius:999px;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.links a:hover{border-color:var(--accent);color:var(--accent)}
+.links a.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px;line-height:1;z-index:2}
+footer{border-top:1px solid var(--line);padding-block:24px 40px;color:var(--muted);font-size:.88rem}
+footer p{max-width:75ch;margin:0 0 8px}
+@media (max-width:600px){.bar{position:static}.tally{display:grid;grid-template-columns:1fr 1fr;width:100%}.tally div:nth-child(2){border-right:0}.tally div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:820px){.sheet{grid-template-columns:1fr}.view img,.view video{max-height:44vh}.info{padding:20px}.theme{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="head-row">
+    <div>
+      <div class="eyebrow">AI and data analysis course · final projects · 2026</div>
+      <h1>BS2026 <em>Project</em> Showcase</h1>
+      <p class="lede">Student final projects, each installed and run from a clean copy of the repository. Open a card for screenshots, the demo video, the report and the command that starts it.</p>
+    </div>
+    <div class="tally" id="tally"></div>
+  </div>
+</header>
+<div class="bar"><div class="wrap">
+  <input class="search" id="q" type="search" placeholder="Search projects, authors, tools" aria-label="Search projects">
+  <div class="chips" id="groups" role="group" aria-label="Filter by topic"></div>
+  <div class="chips" id="statuses" role="group" aria-label="Filter by test result"></div>
+  <button class="theme" id="theme" type="button">Switch theme</button>
+</div></div>
+<main class="wrap">
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>No projects match. Clear the search or pick another filter.</p>
+</main>
+<footer><div class="wrap">
+  <p><strong>Verified</strong> means the project ran end to end here. <strong>Partial</strong> means it ran but something it depends on (data, an API token) is not in the repository. <strong>Not fully tested</strong> means only part of it could be exercised.</p>
+  <p>Screenshots marked “captured during testing” were taken from the student's unmodified code running locally. Projects that could not be run and had no demo material are not listed.</p>
+</div></footer>
+<dialog id="dlg" aria-labelledby="d-title"></dialog>
+<script>
+const P = [{"folder": "Vytas_Mulevicius", "author": "Vytas Mulevicius", "title": "CERN Open Data Explorer", "description": "Multi-page Streamlit dashboard for exploring CMS dimuon collision datasets from the CERN Open Data portal (Run 2011A J/psi, Upsilon and Z samples). It reconstructs invariant mass histograms with kinematic cuts, shows 3D momentum event displays and animations, searches and streams datasets through the opendata.cern.ch API, and generates LHCb DaVinci macros.", "category": "Physics / Data visualization", "group": "Science & engineering", "tech": ["Streamlit", "Polars", "Uproot", "Awkward Array", "Plotly", "Matplotlib", "Pydantic", "pytest", "Pixi"], "status": "works", "tested": "All 102 shipped tests ran with no failures (99 passed, 3 skipped). The Streamlit app started and every page rendered with data downloaded by the project's own script, including the J/psi mass peak at 3.096 GeV.", "caveat": "Data files are not in the repository; run the download script first. XRootD streaming was not tested.", "run": "pixi install\npixi run streamlit run main.py  (or pip install streamlit polars uproot awkward plotly matplotlib pydantic requests scipy pandas\nstreamlit run main.py)", "images": [{"src": "dashboard_assets/Vytas_Mulevicius/screenshot.png", "cap": "Captured during testing"}, {"src": "dashboard_assets/Vytas_Mulevicius/screenshot_3d.png", "cap": "Captured during testing"}], "videos": [], "video_url": "https://www.loom.com/share/e12fc73e9792457eb3c1232111d3d91b", "poster": null, "pages": [], "live": null, "report": "Vytas_Mulevicius/REPORT.pdf", "fit": "cover"}, {"folder": "Tomas_Kondrotas", "author": "Tomas Kondrotas", "title": "OSRS GE Tracker", "description": "Flask web app that tracks Old School RuneScape Grand Exchange prices using live data from the OSRS Wiki Prices API. It offers an item browser, a high-alchemy profit table, a top-10 flip ranking scored by margin, liquidity and max profit, and a per-item page with latest/5m/1h averages and a Chart.js price history chart.", "category": "Web app / Market data", "group": "Finance & markets", "tech": ["Flask", "requests", "Chart.js", "OSRS Wiki Prices API", "ReportLab"], "status": "works", "tested": "The Flask app started and all pages and API routes returned live OSRS Wiki price data, including a rendered price-history chart.", "caveat": "Needs internet. Item icons are fetched by a separate script that takes several minutes.", "run": "pip install flask requests\npython scrape_osrs_icons.py\npython app.py  (then open http://localhost:5001)", "images": [{"src": "dashboard_assets/Tomas_Kondrotas/screenshot.png", "cap": "Captured during testing"}, {"src": "dashboard_assets/Tomas_Kondrotas/screenshot_item.png", "cap": "Captured during testing"}, {"src": "dashboard_assets/Tomas_Kondrotas/screenshot_flips.png", "cap": "Captured during testing"}], "videos": ["Tomas_Kondrotas/demo.mov"], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Tomas_Kondrotas/project_report.pdf", "fit": "cover"}, {"folder": "Dominykas_Baronas", "author": "Dominykas Baronas", "title": "MarketLens", "description": "A single-page Streamlit dashboard for looking up any stock ticker: price/volume candlestick chart, multi-year fundamentals, a rule-based 0-100 financial health score and return/risk statistics. A second section compares two stocks head to head (rebased performance, radar chart, rolling correlation, ratio table) and writes a rule-based verdict. Data is pulled live from Yahoo Finance via yfinance.", "category": "Finance", "group": "Finance & markets", "tech": ["Streamlit", "yfinance", "Plotly", "pandas", "scikit-learn", "SciPy"], "status": "works", "tested": "The Streamlit app started and rendered the default AAPL view and an AAPL vs MSFT comparison with live Yahoo Finance data.", "caveat": "Dividend yield is displayed about 100 times too high (for example 32%). Needs internet.", "run": "pip install -r requirements.txt\nstreamlit run app.py", "images": [{"src": "dashboard_assets/Dominykas_Baronas/screenshot.png", "cap": "Captured during testing"}, {"src": "dashboard_assets/Dominykas_Baronas/screenshot_compare.png", "cap": "Captured during testing"}], "videos": ["Dominykas_Baronas/demo.mp4"], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Dominykas_Baronas/Project Report.pdf", "fit": "cover"}, {"folder": "Agshin_Osmanov", "author": "Agshin Osmanov", "title": "F1 Winners 1950–2025", "description": "Analyses a CSV of 1,142 Formula 1 race winners from 1950 to 2025 to show which drivers and teams dominate and how race counts vary by year, decade and continent. A batch script exports summary tables and matplotlib charts, and a Flask + Plotly dashboard offers the same views with continent and year-range filters.", "category": "Sports analytics", "group": "Data analytics", "tech": ["Python", "pandas", "matplotlib", "Flask", "Plotly"], "status": "works", "tested": "The analysis script reproduced the committed result tables exactly, and the Flask dashboard started and rendered its charts.", "caveat": null, "run": "pip install -r requirements.txt\npython main.py   # charts into results/\npython app.py    # dashboard on http://127.0.0.1:5000", "images": [{"src": "dashboard_assets/Agshin_Osmanov/screenshot.png", "cap": "Captured during testing"}, {"src": "Agshin_Osmanov/results/top_drivers.png", "cap": "From the repository"}, {"src": "Agshin_Osmanov/results/wins_by_year.png", "cap": "From the repository"}], "videos": [], "video_url": "https://youtu.be/AQWHPgqI3xw?si=83u_fvUHYucY1qmY", "poster": null, "pages": [], "live": null, "report": "Agshin_Osmanov/report.pdf", "fit": "cover"}, {"folder": "Danielius_Zarkich", "author": "Danielius Zarkich", "title": "Order Arrival Calculator", "description": "A Streamlit decision-support tool for sales and logistics teams that estimates shipping and delivery dates for an order from the product's origin country, the destination and the contract date. It uses two small CSV tables (products/suppliers and a transit-time matrix) and warns when the delivery date falls on a weekend or a public holiday in the destination country; a second tab shows a world map and bar chart of transit times per origin.", "category": "Logistics / supply chain", "group": "Data analytics", "tech": ["Python", "Streamlit", "pandas", "Plotly", "holidays"], "status": "works", "tested": "The Streamlit app started from the project's requirements file and both tabs rendered: the arrival calculator and the lane insights map.", "caveat": null, "run": "pip install -r requirements.txt\npython -m streamlit run streamlit_app.py", "images": [{"src": "dashboard_assets/Danielius_Zarkich/screenshot_lane_insights.png", "cap": "Captured during testing"}, {"src": "dashboard_assets/Danielius_Zarkich/screenshot.png", "cap": "Captured during testing"}], "videos": ["Danielius_Zarkich/Project_Video.mp4"], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Danielius_Zarkich/Project_Report.pdf", "fit": "cover"}, {"folder": "Mariam_Enukashvili", "author": "Mariam Enukashvili", "title": "Startup Market Analyzer", "description": "An interactive Streamlit dashboard for exploring global startup market trends, with filters for country, industry and funding stage, KPI tiles and Altair charts of funding, valuation, revenue and success scores. It uses a bundled CSV of 5,000 startups (data/raw/startups.csv); a companion script main.py produces static matplotlib charts.", "category": "Business analytics / Dashboard", "group": "Data analytics", "tech": ["Streamlit", "pandas", "Altair", "matplotlib"], "status": "works", "tested": "The chart script ran to completion and the Streamlit dashboard rendered its filters, KPI tiles, table and charts.", "caveat": "requirements.txt is UTF-16 with Windows-only pins; install the four packages by name instead.", "run": "pip install streamlit pandas altair matplotlib\nstreamlit run app.py", "images": [{"src": "dashboard_assets/Mariam_Enukashvili/screenshot.png", "cap": "Captured during testing"}, {"src": "Mariam_Enukashvili/results/funding_trend.png", "cap": "From the repository"}, {"src": "Mariam_Enukashvili/results/top_10_industries.png", "cap": "From the repository"}], "videos": [], "video_url": "https://drive.google.com/file/d/1LYeyY44sME2EI6rVbOHRls3zkaC2jZR1/view?usp=sharing", "poster": null, "pages": [], "live": null, "report": "Mariam_Enukashvili/Startup Market Analyzer Report.pdf", "fit": "cover"}, {"folder": "Anastasija_L-N", "author": "Anastasija Licman-Narkevice", "title": "Aguaciklas Air Quality Reports", "description": "A command-line tool that turns raw air-quality sensor logs (temperature, CO2 ppm, pressure, humidity) from the author's own Aguaciklas sensor hardware into a multi-page PDF report. It computes min/max/average statistics, counts threshold breaches configured in config.json, and draws time-series charts, a normalized stacked-area chart, a CO2 heatmap and a 3D scatter plot.", "category": "IoT / sensor data", "group": "Science & engineering", "tech": ["Python", "pandas", "numpy", "matplotlib"], "status": "works", "tested": "The report builder ran on both committed sensor files and produced 7-page PDF reports with sensible statistics and charts.", "caveat": null, "run": "pip install numpy pandas matplotlib\npython buildReport.py input/RoomVentilation.csv RoomVentilation", "images": [{"src": "dashboard_assets/Anastasija_L-N/report_stacked_area.png", "cap": "Page from a report generated during testing"}, {"src": "dashboard_assets/Anastasija_L-N/report_temperature.png", "cap": "Page from a report generated during testing"}, {"src": "dashboard_assets/Anastasija_L-N/report_summary.png", "cap": "Page from a report generated during testing"}], "videos": ["Anastasija_L-N/Aguaciklas.mp4"], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Anastasija_L-N/Artificial intelligence and data analysis course project.pdf", "fit": "cover"}, {"folder": "Gabriele_Bradunaite", "author": "Gabriele Bradunaite", "title": "Portfolio Data Analysis", "description": "A Jupyter notebook that analyses a sample investment portfolio of 533 holdings from a CSV file using pandas and matplotlib. It charts the top sectors, most expensive stocks, average price per sector, ESG scores and holdings flagged for tobacco, alcohol, gambling, military or fossil fuels. A small static web page presents the charts in tabs.", "category": "Finance / Data visualisation", "group": "Finance & markets", "tech": ["pandas", "matplotlib", "Jupyter", "HTML"], "status": "works", "tested": "The static page renders, and the notebook has stored outputs. On a clean re-run every cell ran except one.", "caveat": "The Top 10 Sectors cell fails on a clean run because `colors` is defined in a later cell.", "run": "open index.html\n# or: jupyter notebook analysis.ipynb", "images": [{"src": "dashboard_assets/Gabriele_Bradunaite/screenshot.png", "cap": "Captured during testing"}, {"src": "Gabriele_Bradunaite/chart5_Avg_stock_price.png", "cap": "From the repository"}, {"src": "Gabriele_Bradunaite/chart4_Top10_Expensive.png", "cap": "From the repository"}], "videos": ["Gabriele_Bradunaite/Video.mov"], "video_url": "https://drive.google.com/file/d/1ox8JbTbPYpQwTVlNA_XVXGKw85tIepOK/view?usp=sharing", "poster": null, "pages": [{"label": "Open the page", "src": "Gabriele_Bradunaite/index.html"}, {"label": "Open the notebook", "src": "Gabriele_Bradunaite/analysis.html"}], "live": null, "report": "Gabriele_Bradunaite/project_review_final.pdf", "fit": "cover"}, {"folder": "ievalabutyte", "author": "Ieva Labutyte", "title": "Export-as-a-Service Market Players Analysis", "description": "A notebook comparing 32 companies in the Export-as-a-Service market (cross-border e-commerce, freight forwarding, tax and payments providers). The dataset is hand-collected and typed directly into the notebook (founding year, country, service type, revenue, employees, public/private); the analysis covers distributions, revenue comparison, revenue per employee, correlations and K-means clustering.", "category": "Market analysis / Clustering", "group": "Data analytics", "tech": ["pandas", "matplotlib", "seaborn", "scikit-learn", "Jupyter", "Pillow"], "status": "works", "tested": "The notebook ran from a clean kernel without errors and regenerated all 11 charts.", "caveat": "The report and the charts disagree slightly (4 clusters in the report, 3 in the chart).", "run": "pip install pandas matplotlib seaborn scikit-learn\njupyter notebook analysis.ipynb", "images": [{"src": "ievalabutyte/chart_clusters.png", "cap": "From the repository"}, {"src": "ievalabutyte/chart_revenue.png", "cap": "From the repository"}, {"src": "ievalabutyte/chart_correlation.png", "cap": "From the repository"}, {"src": "ievalabutyte/project_video.gif", "cap": "Animated slideshow from the repository"}], "videos": [], "video_url": "https://drive.google.com/file/d/1I8pQ3TEocWEIDUEjz_piDEpuEZUJK81y/view?usp=drive_link", "poster": null, "pages": [], "live": null, "report": "ievalabutyte/project_report.pdf", "fit": "cover"}, {"folder": "Ofek_Cohen", "author": "Ofek Cohen", "title": "Sales Profit Donut Chart", "description": "A Python script that reads a 100-row sample sales dataset and draws a two-layer donut chart of total profit: regions on the inner ring and their countries on the outer ring, coloured in shades of the region colour. In an interactive matplotlib window, hovering over a wedge highlights that country or region with enlarged labels.", "category": "Data visualization / Sales", "group": "Data analytics", "tech": ["pandas", "matplotlib", "numpy"], "status": "works", "tested": "The script ran and drew the complete two-ring chart. The hover highlighting needs a desktop window and was not exercised.", "caveat": null, "run": "pip install pandas matplotlib numpy\npython app.py", "images": [{"src": "dashboard_assets/Ofek_Cohen/profit_donut.png", "cap": "Figure produced by the script during testing"}], "videos": [], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Ofek_Cohen/Ofek_Cohen_Assignment.pdf", "fit": "contain"}, {"folder": "Saule_Petrauskaite", "author": "Saule Petrauskaite", "title": "Plate Packing Optimizer", "description": "Interactive Python script that computes how many circular or rectangular parts fit on a round plate while keeping a 2 mm gap and avoiding three fixed forbidden zones near the edge. It brute-force searches rotations and offsets of a hexagonal (circles) or orthogonal (rectangles) grid and draws the best layout with matplotlib. Uses no external dataset; inputs are typed by the user.", "category": "Optimization / Geometry", "group": "Science & engineering", "tech": ["Python", "NumPy", "Matplotlib"], "status": "works", "tested": "The script ran for both shapes on a 300 mm plate: 99 circles of radius 12 and 76 rectangles of 30 × 20, all inside the plate and clear of the forbidden zones.", "caveat": "No report or video was submitted.", "run": "pip install numpy matplotlib\npython3 \"Plate Packing Optimization.py\"", "images": [{"src": "dashboard_assets/Saule_Petrauskaite/circles.png", "cap": "Figure produced by the script during testing"}, {"src": "dashboard_assets/Saule_Petrauskaite/rectangles.png", "cap": "Figure produced by the script during testing"}], "videos": [], "video_url": null, "poster": null, "pages": [], "live": null, "report": null, "fit": "contain"}, {"folder": "Rasa_Kundrotaite", "author": "Rasa Kundrotaite", "title": "Legal Obligation Extraction", "description": "Streamlit app that extracts binding legal obligations (actor, action, modality, condition) from uploaded regulatory PDFs using an LLM via the Hugging Face Inference API, validated with a Pydantic schema. A second page analyses the extracted obligations with Plotly charts, TF-IDF + K-Means semantic clustering and an actor-action network graph. Demonstrated on the EU AI Act (Regulation 2024/1689).", "category": "NLP / LLM extraction", "group": "Language & AI", "tech": ["Streamlit", "Hugging Face Inference API", "Pydantic", "pdfplumber", "scikit-learn", "Plotly", "NetworkX"], "status": "partial", "tested": "The app started, parsed and chunked an uploaded PDF, and the analysis page rendered its 7 charts. The extraction step itself needs a Hugging Face token and was not run.", "caveat": "Needs a Hugging Face token. The screenshots are the author's own, showing the EU AI Act run.", "run": "conda env create -f env.yml\nconda activate lo_extraction\nstreamlit run app.py   # needs HF_TOKEN", "images": [{"src": "Rasa_Kundrotaite/image.png", "cap": "From the repository"}, {"src": "Rasa_Kundrotaite/image-1.png", "cap": "From the repository"}, {"src": "Rasa_Kundrotaite/image-2.png", "cap": "From the repository"}], "videos": [], "video_url": "https://drive.google.com/file/d/1Mc3VpebAsqfJjUeYfF4SdICG3B3gyxcX/view?usp=sharing", "poster": null, "pages": [], "live": null, "report": "Rasa_Kundrotaite/REPORT.md", "fit": "cover"}, {"folder": "Arturas_Sotnicenko", "author": "Arturas Sotnicenko", "title": "CCOutline", "description": "Collects annual macroeconomic indicators (GDP, inflation, unemployment, debt, trade balance, interest and exchange rates) from the World Bank, Eurostat, OECD and IMF, harmonizes them and analyses them with z-score and rolling-window normalization in Jupyter notebooks. The results are published through a static D3 + Redux Toolkit web app (ccoutline.com) with a clickable globe, per-indicator charts and forecasts.", "category": "Economics / time series", "group": "Finance & markets", "tech": ["Python", "Jupyter", "matplotlib", "JavaScript", "D3.js", "Redux Toolkit", "Node test runner", "Firebase Hosting"], "status": "partial", "tested": "All 7 notebooks contain executed outputs, and 94 of the web app's 96 tests pass. The public site loads and renders.", "caveat": "The site's data files and the notebook helper module are not in the repository, so it cannot be rebuilt from this folder.", "run": "cd ccoutline_app\nnpm ci\nnode --test tests/*.mjs", "images": [{"src": "dashboard_assets/Arturas_Sotnicenko/screenshot_live_site.png", "cap": "Capture of the public site, ccoutline.com"}, {"src": "dashboard_assets/Arturas_Sotnicenko/notebook_zscore_lithuania.png", "cap": "Chart stored in the notebook"}], "videos": [], "video_url": null, "poster": null, "pages": [], "live": "https://ccoutline.com", "report": "Arturas_Sotnicenko/CCOutline_Report.pdf", "fit": "cover"}, {"folder": "Alexey_Fedorov", "author": "Alexey Fedorov", "title": "Bass Pickup Analyzer 3000", "description": "A Streamlit tool that compares bass guitar pickups from audio recordings. It reads every .wav file in a folder, runs an FFT with numpy, converts magnitudes to a dB scale, and plots the overlaid frequency spectra with a table of peak frequency and dynamic range per pickup.", "category": "Audio / signal analysis", "group": "Science & engineering", "tech": ["Python", "Streamlit", "numpy", "soundfile", "matplotlib", "pandas"], "status": "partial", "tested": "The Streamlit app started and plotted spectra and its summary table when given generated test tones.", "caveat": "No audio samples are in the repository, so the author's own recordings could not be analysed. See the video for real results.", "run": "pip install streamlit numpy soundfile matplotlib pandas\nstreamlit run main.py -- /path/to/wav_folder", "images": [], "videos": [], "video_url": "https://youtu.be/1lbCyk6Z5JU", "poster": "https://img.youtube.com/vi/1lbCyk6Z5JU/hqdefault.jpg", "pages": [], "live": null, "report": "Alexey_Fedorov/report.pdf", "fit": "cover"}, {"folder": "Juta_Varnyte", "author": "Juta Varnyte", "title": "Wind Farm Design & Energy Analysis Tool", "description": "A Streamlit dashboard for offshore wind resource assessment: wind speed and direction statistics, monthly patterns, wind rose, turbine power curves, comparison of five turbine models, a simple farm layout with Jensen wake losses and P50/P75/P90 energy yield. According to the report it uses EPSO-G public LIDAR measurements from the Baltic Sea (Curonian Nord site), loaded from CSV files in the working folder.", "category": "Energy / Wind", "group": "Science & engineering", "tech": ["Streamlit", "pandas", "NumPy", "matplotlib", "windrose", "SciPy"], "status": "partial", "tested": "With stand-in measurement files and pandas below version 3, the analysis script ran to the end and the dashboard served all 8 tabs.", "caveat": "The LIDAR data files are not in the repository, so the author's actual results could not be reproduced. The video link may need a VU login.", "run": "pip install streamlit 'pandas<3' numpy matplotlib windrose scipy\nstreamlit run dashboard.py   # needs the EPSO-G CSV files", "images": [], "videos": [], "video_url": "https://vult-my.sharepoint.com/:v:/g/personal/juta_varnyte_steam_vu_lt/IQBpJ6tsrffATphBzZkhk86WAfdcPCQt0jxddzmaYyP3Az4?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=qh5tIq", "poster": null, "pages": [], "live": null, "report": "Juta_Varnyte/project_report.pdf", "fit": "cover"}, {"folder": "Matas_Luksys", "author": "Matas Lukšys", "title": "CryptoGuesser", "description": "Predicts whether a cryptocurrency's next candle will close up or down using an ensemble of three PyTorch LSTM models trained on 1h, 4h and 1d candles. Market data for ten USDT pairs is downloaded from Binance via ccxt and stored as Parquet; a click CLI and a Streamlit dashboard drive fetching, training and prediction, with a Plotly candlestick chart.", "category": "Finance / Deep learning", "group": "Finance & markets", "tech": ["PyTorch", "ccxt", "pandas", "scikit-learn", "Streamlit", "Plotly", "click"], "status": "unverified", "tested": "The data pipeline ran: 1,096 daily BTC candles downloaded from Binance, cleaned, and turned into the 20 model features. Training and the dashboard were not run because PyTorch was not installed for testing.", "caveat": "No trained models are committed; fetch data and train before opening the dashboard.", "run": "cd CryptoGuesser\npip install -r requirements.txt\npython cli.py fetch && python cli.py train\nstreamlit run dashboard/app.py", "images": [], "videos": [], "video_url": "https://youtu.be/0qpMi-MpryA", "poster": "https://img.youtube.com/vi/0qpMi-MpryA/hqdefault.jpg", "pages": [], "live": null, "report": "Matas_Luksys/Report.pdf", "fit": "cover"}, {"folder": "Martynas_Gaizutis", "author": "Martynas Gaižutis", "title": "IO, Universal Retriever", "description": "A business-oriented retrieval-augmented generation (RAG) system for a company called GravityX. It indexes TXT, PDF, DOCX and XLSX documents into Elasticsearch, retrieves context with BM25, generates structured answers with OpenAI (gpt-4o-mini) and runs a second LLM validation pass; it has both a CLI and a Streamlit UI.", "category": "NLP / RAG", "group": "Language & AI", "tech": ["Haystack", "Elasticsearch", "OpenAI API", "Streamlit", "sentence-transformers", "pandas", "pypdf"], "status": "unverified", "tested": "The shipped unit tests pass and the Streamlit interface starts. Indexing and answering need Elasticsearch and an OpenAI key and were not run.", "caveat": "Fails to import with the current haystack-ai 3.x; install a version below 3.", "run": "cd University_Project_CLEAN\npip install -e .[ui] 'haystack-ai<3'\nstreamlit run ui_module.py   # needs Elasticsearch and OPENAI_API_KEY", "images": [{"src": "dashboard_assets/Martynas_Gaizutis/screenshot.png", "cap": "Captured during testing, without Elasticsearch connected"}], "videos": [], "video_url": null, "poster": null, "pages": [], "live": null, "report": "Martynas_Gaizutis/University_Project_3_Page_Description.pdf", "fit": "cover"}];
+const REPO = "https://github.com/MindaugasSarpis/bs2026_student_projects/tree/main/";
+const LABEL = {works:"Verified", partial:"Partial", unverified:"Not fully tested"};
+const $ = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+const enc = p => p.split("/").map(encodeURIComponent).join("/");
+const state = {q:"", group:"All", status:"All"};
+
+function tally(){
+  const n = s => P.filter(p => p.status === s).length;
+  const items = [[P.length,"projects"],[n("works"),"verified"],[n("partial"),"partial"],[n("unverified"),"not fully tested"]];
+  const t = document.getElementById("tally");
+  items.forEach(([v,l]) => { const d = $("div"); d.append($("b",null,v), $("span",null,l)); t.append(d); });
+}
+function chips(id, values, key, labeler){
+  const box = document.getElementById(id);
+  values.forEach(v => {
+    const b = $("button","chip", labeler ? labeler(v) : v); b.type = "button";
+    b.setAttribute("aria-pressed", String(state[key] === v));
+    b.onclick = () => { state[key] = v; [...box.children].forEach(c => c.setAttribute("aria-pressed", String(c === b))); render(); };
+    box.append(b);
+  });
+}
+function thumb(p){
+  const t = $("div","thumb" + (p.fit === "contain" ? " contain" : ""));
+  const ph = () => t.replaceChildren($("div","ph",p.title));
+  if (p.images.length || p.poster){
+    const i = $("img"); i.loading = "lazy"; i.alt = "";
+    i.src = p.images.length ? enc(p.images[0].src) : p.poster; i.onerror = ph; t.append(i);
+  } else ph();
+  if (p.videos.length || p.video_url) t.append($("span","play","▶ video"));
+  return t;
+}
+function card(p){
+  const c = $("button","card"); c.type = "button"; c.onclick = () => open(p);
+  const b = $("div","body"), m = $("div","meta");
+  m.append($("span","group",p.group), $("span","pill "+p.status, LABEL[p.status]));
+  const tags = $("div","tags"); p.tech.slice(0,4).forEach(x => tags.append($("span","tag",x)));
+  b.append(m, $("h2",null,p.title), $("p","author",p.author), $("p","blurb",p.description), tags);
+  c.append(thumb(p), b); return c;
+}
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const list = P.filter(p => (state.group === "All" || p.group === state.group)
+    && (state.status === "All" || p.status === state.status)
+    && (!q || [p.title,p.author,p.description,p.category,p.tech.join(" ")].join(" ").toLowerCase().includes(q)));
+  document.getElementById("grid").replaceChildren(...list.map(card));
+  document.getElementById("empty").hidden = list.length > 0;
+  document.getElementById("count").textContent = list.length + " of " + P.length + " projects";
+}
+function open(p){
+  const d = document.getElementById("dlg");
+  const media = [...p.images.map(i => ({t:"img",...i})), ...p.videos.map(v => ({t:"vid",src:v}))];
+  const sheet = $("div","sheet"), info = $("div","info");
+  const x = $("button","close","×"); x.type = "button"; x.setAttribute("aria-label","Close"); x.onclick = () => d.close();
+  if (media.length){
+    const stage = $("div","stage"), view = $("div","view"), cap = $("div","group"), strip = $("div","strip");
+    const show = (m, btn) => {
+      let el;
+      if (m.t === "img"){ el = $("img"); el.alt = m.cap || p.title; }
+      else { el = $("video"); el.controls = true; el.preload = "metadata"; }
+      el.src = enc(m.src); view.replaceChildren(el);
+      cap.textContent = m.t === "img" ? (m.cap || "") : "Demo video from the repository";
+      [...strip.children].forEach(c => c.setAttribute("aria-current", String(c === btn)));
+    };
+    media.forEach((m,i) => {
+      const b = $("button"); b.type = "button"; b.setAttribute("aria-label", m.t === "img" ? "Image " + (i+1) : "Play video");
+      if (m.t === "img"){ const im = $("img"); im.src = enc(m.src); im.alt = ""; b.append(im); } else b.append($("span","vid","▶ video"));
+      b.onclick = () => show(m,b); strip.append(b);
+    });
+    stage.append(view, cap); if (media.length > 1) stage.append(strip);
+    sheet.append(stage); show(media[0], strip.children[0]);
+  } else sheet.style.gridTemplateColumns = "1fr";
+  const m = $("div","meta"); m.style.justifyContent = "flex-start";
+  m.append($("span","pill "+p.status, LABEL[p.status]), $("span","group",p.category));
+  const h = $("h2",null,p.title); h.id = "d-title";
+  info.append(m, h, $("p","author","by " + p.author), $("p",null,p.description));
+  const sec = (title, node) => { const s = $("div"); s.append($("h3",null,title), node); info.append(s); };
+  sec("What was tested", $("p",null,p.tested));
+  if (p.caveat) info.append($("p","caveat",p.caveat));
+  const cmd = $("div","cmd"), code = $("code",null,p.run), cp = $("button",null,"Copy"); cp.type = "button";
+  cp.onclick = () => { const done = () => { cp.textContent = "Copied"; setTimeout(() => cp.textContent = "Copy", 1500); };
+    (navigator.clipboard ? navigator.clipboard.writeText(p.run) : Promise.reject()).then(done).catch(() => { const r = document.createRange(); r.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }); };
+  cmd.append(code, cp); sec("Run it", cmd);
+  const tags = $("div","tags"); p.tech.forEach(t => tags.append($("span","tag",t))); sec("Built with", tags);
+  const links = $("div","links");
+  const a = (txt, href, cls) => { const l = $("a",cls,txt); l.href = href; l.target = "_blank"; l.rel = "noopener"; links.append(l); };
+  if (p.live) a("Live site", p.live, "primary");
+  p.pages.forEach(pg => a(pg.label, enc(pg.src), "primary"));
+  if (p.video_url) a("Watch video", p.video_url, (p.live || p.pages.length) ? "" : "primary");
+  if (p.report) a("Report", enc(p.report));
+  a("Source code", REPO + enc(p.folder));
+  info.append(links);
+  sheet.append(info); d.replaceChildren(x, sheet); d.showModal(); d.scrollTop = 0;
+}
+document.getElementById("dlg").addEventListener("click", e => { if (e.target.id === "dlg") e.target.close(); });
+document.getElementById("dlg").addEventListener("close", e => e.target.querySelectorAll("video").forEach(v => v.pause()));
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+document.getElementById("theme").onclick = () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark"; try { localStorage.setItem("theme", r.dataset.theme); } catch(e){}
+};
+try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+tally();
+chips("groups", ["All", ...new Set(P.map(p => p.group))], "group");
+chips("statuses", ["All","works","partial","unverified"], "status", v => v === "All" ? "Any result" : LABEL[v]);
+render();
+</script>
+</body>
+</html>
