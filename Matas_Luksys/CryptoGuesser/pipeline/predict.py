@@ -1,17 +1,19 @@
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'pipeline'))
+# pipeline/predict.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 
 import math
 import numpy as np
 import torch
 import joblib
-from pathlib import Path
 
 from fetch import load_raw, MODEL_CONFIGS
 from clean import clean
 from features import add_features, normalize_features, FEATURE_COLS
 
-MODELS_DIR = Path("models")
+
+MODELS_DIR = Path(__file__).parent.parent / "models"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -45,7 +47,7 @@ def get_prediction(symbol: str, model: str = "m3", threshold: float = 0.65) -> d
     net, scaler, model_date, window = _load_model(model)
 
     df = load_raw(symbol, model)
-    df = clean(df)
+    df = clean(df, timeframe=MODEL_CONFIGS[model]["timeframe"])
     df = add_features(df)
 
     # Use saved scaler — transform only, never refit
