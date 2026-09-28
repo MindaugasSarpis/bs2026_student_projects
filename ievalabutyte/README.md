@@ -11,6 +11,9 @@ in the Export-as-a-Service (EaaS) market.
 4. Apply clustering to segment companies
 5. Automate data collection using Python
 
+ ## Screen Recording
+[Watch the demo](https://drive.google.com/file/d/1I8pQ3TEocWEIDUEjz_piDEpuEZUJK81y/view?usp=drive_link)
+
 ## Tools
 - Python 3.x
 - pandas
